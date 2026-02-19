@@ -30,5 +30,5 @@
   - выполнен formal compliance review против базового ТЗ.
 
 ## Контроль изменений
-last_checked_commit: 374db93f3be85d98e4e691a2ca23c1482f1d0bc5
+last_checked_commit: 374db935df57ecdf263e4629bd66adbafbae2a3e
 last_checked_date: 2026-02-20 04:37:00 +0700
