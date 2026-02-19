@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 namespace AudioManagement
@@ -73,17 +74,17 @@ namespace AudioManagement
                 movingEmitter.position = new Vector3(x, 0f, z);
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha1))
+            if (WasPressedThisFrame(Key.Digit1, Key.Numpad1))
             {
                 manager.PlayUI(uiClip);
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha2))
+            if (WasPressedThisFrame(Key.Digit2, Key.Numpad2))
             {
                 manager.PlaySFX(sfxClip, follow: movingEmitter);
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha3))
+            if (WasPressedThisFrame(Key.Digit3, Key.Numpad3))
             {
                 if (musicHandle.IsValid)
                 {
@@ -96,7 +97,7 @@ namespace AudioManagement
                 }
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha4))
+            if (WasPressedThisFrame(Key.Digit4, Key.Numpad4))
             {
                 paused = !paused;
                 manager.PauseAll(paused);
@@ -184,6 +185,17 @@ namespace AudioManagement
             var clip = AudioClip.Create(name, sampleCount, 1, sampleRate, false);
             clip.SetData(data, 0);
             return clip;
+        }
+
+        private static bool WasPressedThisFrame(Key mainKey, Key altKey)
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard == null)
+            {
+                return false;
+            }
+
+            return keyboard[mainKey].wasPressedThisFrame || keyboard[altKey].wasPressedThisFrame;
         }
 
         private static AudioClip CreateMusicLoop(string name, float durationSeconds, float amplitude)
