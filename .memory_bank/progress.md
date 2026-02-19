@@ -21,5 +21,5 @@
 - От placeholder-документации к полной реализации data-driven AudioManager с docs-first процессом и multi-agent ролями.
 
 ## Контроль изменений
-last_checked_commit: e73c43bb58999181594b229afed6d1b6f5bdaa2e
-last_checked_date: 2026-02-20 03:35:32 +0700
+last_checked_commit: d6ce1cbf27be39a1054f475db02474feb9291786
+last_checked_date: 2026-02-20 03:56:46 +0700
