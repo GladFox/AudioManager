@@ -86,8 +86,12 @@ namespace AudioManagement
 
         private int nextHandleId = 1;
         private int activeSnapshotPriority;
+        private int activeSnapshotFrame = -1;
         private string activeSnapshotName = string.Empty;
         private bool isPaused;
+        private bool userPauseRequested;
+        private bool focusPauseRequested;
+        private bool appPauseRequested;
         private uint rngState = 2463534242u;
         private float lastMasterVolumeBeforeMute = 1f;
 
@@ -115,8 +119,12 @@ namespace AudioManagement
 
             if (config == null)
             {
-                config = AudioConfig.CreateRuntimeDefaults();
-                Debug.LogWarning("[AudioManager] AudioConfig is missing. Runtime defaults were applied.");
+                config = Resources.Load<AudioConfig>("Audio/AudioConfig");
+                if (config == null)
+                {
+                    config = AudioConfig.CreateRuntimeDefaults();
+                    Debug.LogWarning("[AudioManager] AudioConfig is missing. Runtime defaults were applied.");
+                }
             }
 
             InitializeEventCatalog();
@@ -322,9 +330,19 @@ namespace AudioManagement
             return TryGetEventById(id, out var evt) ? PlaySFX(evt, position) : AudioHandle.Invalid;
         }
 
+        public AudioHandle PlaySFX(string id, Transform follow)
+        {
+            return TryGetEventById(id, out var evt) ? PlaySFX(evt, follow: follow) : AudioHandle.Invalid;
+        }
+
         public AudioHandle PlayMusic(string id)
         {
             return TryGetEventById(id, out var evt) ? PlayMusic(evt) : AudioHandle.Invalid;
+        }
+
+        public AudioHandle PlayMusic(string id, float fadeIn, float crossfade, bool restartIfSame = false)
+        {
+            return TryGetEventById(id, out var evt) ? PlayMusic(evt, fadeIn, crossfade, restartIfSame) : AudioHandle.Invalid;
         }
 
         public void SetMasterVolume01(float value)
@@ -378,7 +396,8 @@ namespace AudioManagement
                 return false;
             }
 
-            if (!string.IsNullOrEmpty(activeSnapshotName) && priority < activeSnapshotPriority)
+            // Policy: within the same frame, highest priority wins; across frames, last request wins.
+            if (activeSnapshotFrame == Time.frameCount && !string.IsNullOrEmpty(activeSnapshotName) && priority < activeSnapshotPriority)
             {
                 LogInfo($"TransitionToSnapshot('{name}') skipped by priority policy. Active='{activeSnapshotName}'({activeSnapshotPriority}), requested={priority}.");
                 return false;
@@ -387,6 +406,7 @@ namespace AudioManagement
             snapshot.TransitionTo(Mathf.Max(0f, transitionTime));
             activeSnapshotName = name;
             activeSnapshotPriority = priority;
+            activeSnapshotFrame = Time.frameCount;
             return true;
         }
 
@@ -415,6 +435,40 @@ namespace AudioManagement
             }
         }
 
+        public int StopByEventId(string id, float fadeOut = 0f)
+        {
+            if (!TryGetEventById(id, out var evt))
+            {
+                return 0;
+            }
+
+            return StopByEvent(evt, fadeOut);
+        }
+
+        public int StopByEvent(SoundEvent evt, float fadeOut = 0f)
+        {
+            if (evt == null)
+            {
+                return 0;
+            }
+
+            var ids = new List<int>(activeVoices.Count);
+            foreach (var kv in activeVoices)
+            {
+                if (kv.Value.Event == evt)
+                {
+                    ids.Add(kv.Key);
+                }
+            }
+
+            for (var i = 0; i < ids.Count; i++)
+            {
+                Stop(new AudioHandle(this, ids[i]), fadeOut);
+            }
+
+            return ids.Count;
+        }
+
         public void StopMusic(float fadeOut = 0f)
         {
             var ids = CollectHandlesByBus(AudioBus.Music);
@@ -426,7 +480,19 @@ namespace AudioManagement
 
         public void PauseAll(bool pause)
         {
-            isPaused = pause;
+            userPauseRequested = pause;
+            ApplyPauseState();
+        }
+
+        private void ApplyPauseState()
+        {
+            var targetPause = userPauseRequested || focusPauseRequested || appPauseRequested;
+            if (targetPause == isPaused)
+            {
+                return;
+            }
+
+            isPaused = targetPause;
 
             foreach (var kv in activeVoices)
             {
@@ -436,7 +502,7 @@ namespace AudioManagement
                     continue;
                 }
 
-                if (pause)
+                if (targetPause)
                 {
                     voice.Source.Pause();
                 }
@@ -499,25 +565,28 @@ namespace AudioManagement
 
         private void OnApplicationFocus(bool hasFocus)
         {
-            if (config != null && config.PauseSfxAndMusicOnFocusLost && !hasFocus)
+            if (config == null || !config.PauseSfxAndMusicOnFocusLost)
             {
-                PauseAll(true);
+                focusPauseRequested = false;
+                ApplyPauseState();
+                return;
             }
 
-            if (config != null && config.PauseSfxAndMusicOnFocusLost && hasFocus)
-            {
-                PauseAll(false);
-            }
+            focusPauseRequested = !hasFocus;
+            ApplyPauseState();
         }
 
         private void OnApplicationPause(bool pauseStatus)
         {
             if (config == null || !config.PauseSfxAndMusicOnApplicationPause)
             {
+                appPauseRequested = false;
+                ApplyPauseState();
                 return;
             }
 
-            PauseAll(pauseStatus);
+            appPauseRequested = pauseStatus;
+            ApplyPauseState();
         }
 
         private AudioHandle PlayEvent(SoundEvent evt, float volumeMul, float pitchMul, bool allowOverlap, Vector3? position, Transform follow, bool force2D)

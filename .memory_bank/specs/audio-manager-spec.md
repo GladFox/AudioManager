@@ -5,6 +5,7 @@
 - Работа через `AudioMixer` + `AudioMixerSnapshot`.
 - Пуллинг `AudioSource` (2D и 3D пулы, лимиты, steal policy).
 - API уровня gameplay/UI + управление жизненным циклом.
+- Автоматизируемый production bootstrap ассетов (`AudioProductionSetup`).
 
 ## Required Runtime Components
 - `AudioManager`

@@ -28,13 +28,13 @@
 
 ## Current Status
 - Data Layer: Done.
-- Runtime Core: Done (static review pending runtime verification in Unity editor).
+- Runtime Core: Done.
 - Integration: Done.
-- Tooling: Done.
-- QA acceptance run in Unity profiler/editor: Pending.
+- Tooling: Done (including production asset bootstrap).
+- QA acceptance run in Unity profiler/editor: Partially done (headless validation complete, manual profiler checks pending).
 
 ## Open Questions for Product/Tech Lead
 1. Addressables для клипов: подтверждаем `No` на текущем этапе?
 2. WebGL target: нужен ли официальный support в этом релизе?
-3. Snapshot priority matrix: подтвердить приоритеты (`Pause > Menu > Gameplay > Default`?)
+3. Snapshot priority matrix: подтвердить финальную матрицу приоритетов для runtime (сейчас same-frame by priority, cross-frame last request wins).
 4. Persistence backend: `PlayerPrefs` достаточно или нужен project storage abstraction?

@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1cfc85aefbb5842b0815d3d500905fd8, type: 3}
+  m_Name: AudioConfig
+  m_EditorClassIdentifier: Assembly-CSharp::AudioManagement.AudioConfig
+  mixer: {fileID: 24100000, guid: ef8b1e7515ad44601875dbdf3031500b, type: 2}
+  mixerGroups:
+  - Bus: 0
+    Group: {fileID: 24300002, guid: ef8b1e7515ad44601875dbdf3031500b, type: 2}
+  - Bus: 1
+    Group: {fileID: 6773312545811813497, guid: ef8b1e7515ad44601875dbdf3031500b, type: 2}
+  - Bus: 2
+    Group: {fileID: 464431860703006536, guid: ef8b1e7515ad44601875dbdf3031500b, type: 2}
+  - Bus: 3
+    Group: {fileID: 2763017198886451409, guid: ef8b1e7515ad44601875dbdf3031500b, type: 2}
+  - Bus: 4
+    Group: {fileID: -1654677267726903968, guid: ef8b1e7515ad44601875dbdf3031500b, type: 2}
+  - Bus: 5
+    Group: {fileID: 3517034689471919986, guid: ef8b1e7515ad44601875dbdf3031500b, type: 2}
+  snapshots:
+  - Name: Default
+    Snapshot: {fileID: 24500006, guid: ef8b1e7515ad44601875dbdf3031500b, type: 2}
+    Priority: 0
+  - Name: Gameplay
+    Snapshot: {fileID: -1431902712805633611, guid: ef8b1e7515ad44601875dbdf3031500b, type: 2}
+    Priority: 10
+  - Name: Menu
+    Snapshot: {fileID: 8455183109115201440, guid: ef8b1e7515ad44601875dbdf3031500b, type: 2}
+    Priority: 20
+  - Name: Muffled
+    Snapshot: {fileID: -3013740301925601642, guid: ef8b1e7515ad44601875dbdf3031500b, type: 2}
+    Priority: 25
+  - Name: Pause
+    Snapshot: {fileID: -1186995402446374988, guid: ef8b1e7515ad44601875dbdf3031500b, type: 2}
+    Priority: 30
+  - Name: Muted
+    Snapshot: {fileID: 6417315899536713026, guid: ef8b1e7515ad44601875dbdf3031500b, type: 2}
+    Priority: 100
+  exposedVolumeParams:
+    Master: MasterVolume
+    Music: MusicVolume
+    Sfx: SFXVolume
+    UI: UIVolume
+    Ambience: AmbienceVolume
+    Voice: VoiceVolume
+  defaultVolumes:
+    Master: 1
+    Music: 0.9
+    Sfx: 1
+    UI: 1
+    Ambience: 0.9
+    Voice: 1
+  pool2D:
+    InitialSize: 24
+    MaxSize: 96
+    ExpandStep: 8
+    StealPolicy: 0
+    AutoReleaseCheckInterval: 0.08
+  pool3D:
+    InitialSize: 20
+    MaxSize: 96
+    ExpandStep: 8
+    StealPolicy: 0
+    AutoReleaseCheckInterval: 0.08
+  soundEvents:
+  - {fileID: 11400000, guid: 9487a314eaa9741bf9f22dfaad1f1e6b, type: 2}
+  - {fileID: 11400000, guid: e3cd4e4d13a9f4fb6b9379605b4365e9, type: 2}
+  - {fileID: 11400000, guid: 0fc84a61da31346608c5bb787431d5ed, type: 2}
+  enableDebugLogs: 1
+  pauseSfxAndMusicOnFocusLost: 1
+  pauseSfxAndMusicOnApplicationPause: 1
+  uiAlwaysUnscaled: 1
+  minDb: -80
+  maxDb: 0
