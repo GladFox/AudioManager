@@ -101,6 +101,51 @@ namespace AudioManagement
         public float MinDb => minDb;
         public float MaxDb => maxDb;
 
+        public static AudioConfig CreateRuntimeDefaults()
+        {
+            var instance = CreateInstance<AudioConfig>();
+            instance.hideFlags = HideFlags.DontSave;
+
+            instance.mixer = null;
+            instance.mixerGroups = Array.Empty<MixerGroupBinding>();
+            instance.snapshots = Array.Empty<SnapshotBinding>();
+            instance.soundEvents = Array.Empty<SoundEvent>();
+
+            instance.exposedVolumeParams = new ExposedVolumeParams
+            {
+                Master = "MasterVolume",
+                Music = "MusicVolume",
+                Sfx = "SFXVolume",
+                UI = "UIVolume",
+                Ambience = "AmbienceVolume",
+                Voice = "VoiceVolume"
+            };
+
+            instance.defaultVolumes = new DefaultVolumes01
+            {
+                Master = 1f,
+                Music = 1f,
+                Sfx = 1f,
+                UI = 1f,
+                Ambience = 1f,
+                Voice = 1f
+            };
+
+            instance.pool2D = new PoolSettings(16, 64, 4, StealPolicy.StealLowestPriority, 0.1f);
+            instance.pool3D = new PoolSettings(16, 64, 4, StealPolicy.StealLowestPriority, 0.1f);
+            instance.pool2D.Normalize();
+            instance.pool3D.Normalize();
+
+            instance.enableDebugLogs = false;
+            instance.pauseSfxAndMusicOnFocusLost = true;
+            instance.pauseSfxAndMusicOnApplicationPause = true;
+            instance.uiAlwaysUnscaled = true;
+            instance.minDb = -80f;
+            instance.maxDb = 0f;
+
+            return instance;
+        }
+
         public bool TryGetMixerGroup(AudioBus bus, out AudioMixerGroup group)
         {
             for (var i = 0; i < mixerGroups.Length; i++)

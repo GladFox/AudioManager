@@ -115,8 +115,8 @@ namespace AudioManagement
 
             if (config == null)
             {
-                Debug.LogWarning("[AudioManager] AudioConfig is missing.");
-                return;
+                config = AudioConfig.CreateRuntimeDefaults();
+                Debug.LogWarning("[AudioManager] AudioConfig is missing. Runtime defaults were applied.");
             }
 
             InitializeEventCatalog();

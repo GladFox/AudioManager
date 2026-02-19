@@ -8,6 +8,7 @@
 - Music A/B каналы с fade/crossfade и поддержкой stop/pause.
 - `AudioHandle` для runtime управления playback.
 - `UIButtonSound`, `AudioSceneEmitter`, `AudioValidator`, `AudioDebuggerWindow`.
+- Тестовая сцена `AudioDemoScene` с рабочим runtime-демо `PlayUI/PlaySFX/PlayMusic/PauseAll`.
 
 ## В работе
 - Runtime acceptance в Unity Profiler и заполнение метрик по производительности.
