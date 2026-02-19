@@ -1,19 +1,23 @@
 # Progress
 
 ## Что работает
-- Инициализированы AGENTS-процессы и базовый Memory Bank.
-- Зафиксировано целевое ТЗ и архитектурные решения для реализации AudioManager.
+- Централизованный API `PlayUI/PlaySFX/PlayMusic` (event/id/clip варианты).
+- 2D/3D source pooling с лимитами, expansion и `StealPolicy`.
+- `SoundEvent` с clip-selection (random/sequence/weighted), anti-spam, spatial параметрами.
+- Mixer volume control (`0..1` -> dB), mute и snapshot transitions с приоритетом.
+- Music A/B каналы с fade/crossfade и поддержкой stop/pause.
+- `AudioHandle` для runtime управления playback.
+- `UIButtonSound`, `AudioSceneEmitter`, `AudioValidator`, `AudioDebuggerWindow`.
 
 ## В работе
-- Реализация runtime API, pooling, snapshots и music crossfade.
-- Реализация editor-компонентов (validator/debugger).
-- Подготовка integration docs и acceptance test checklist.
+- Runtime acceptance в Unity Profiler и заполнение метрик по производительности.
 
 ## Известные проблемы
-- Требуется подтверждение по Addressables и WebGL из продуктовых ограничений.
+- Не выполнен runtime прогон в Unity Editor в рамках CLI-сессии (требуется ручной запуск редактора).
+- Требуется подтверждение продуктовых решений по Addressables/WebGL.
 
 ## Эволюция решений
-- Переход от placeholder-документации к конкретному плану поставки AudioManager с ролями и критериями приемки.
+- От placeholder-документации к полной реализации data-driven AudioManager с docs-first процессом и multi-agent ролями.
 
 ## Контроль изменений
 last_checked_commit: e73c43bb58999181594b229afed6d1b6f5bdaa2e
