@@ -182,7 +182,6 @@ namespace AudioManagement
             pooled.Source.loop = false;
             pooled.Source.pitch = 1f;
             pooled.Source.volume = 1f;
-            pooled.Source.time = 0f;
 
             pooled.InUse = false;
             pooled.Priority = 128;

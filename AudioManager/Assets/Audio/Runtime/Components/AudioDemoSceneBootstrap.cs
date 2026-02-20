@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 namespace AudioManagement
@@ -6,14 +7,15 @@ namespace AudioManagement
     public sealed class AudioDemoSceneBootstrap : MonoBehaviour
     {
         private const string DemoSceneName = "AudioDemoScene";
+        private const string UiEventId = "demo.ui.click";
+        private const string SfxEventId = "demo.sfx.moving";
+        private const string MusicEventId = "demo.music.loop";
 
         private AudioHandle musicHandle;
         private Transform movingEmitter;
-        private AudioClip uiClip;
-        private AudioClip sfxClip;
-        private AudioClip musicClip;
         private float motionTime;
         private bool paused;
+        private bool menuSnapshot;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
@@ -36,9 +38,6 @@ namespace AudioManagement
         private void Awake()
         {
             EnsureAudioManager();
-            uiClip = CreateTone("UI_Click", 1320f, 0.08f, 0.18f);
-            sfxClip = CreateTone("SFX_Blip", 440f, 0.28f, 0.22f);
-            musicClip = CreateMusicLoop("Music_Loop", 6f, 0.08f);
 
             var followGo = new GameObject("SFX Follow Target");
             movingEmitter = followGo.transform;
@@ -53,8 +52,9 @@ namespace AudioManagement
                 return;
             }
 
-            musicHandle = manager.PlayMusic(musicClip, 0.4f, 0.4f);
-            manager.PlayUI(uiClip, 0.8f, 1f);
+            musicHandle = manager.PlayMusic(MusicEventId);
+            manager.PlayUI(UiEventId);
+            manager.TransitionToSnapshot("Gameplay", 0.1f);
         }
 
         private void Update()
@@ -73,17 +73,22 @@ namespace AudioManagement
                 movingEmitter.position = new Vector3(x, 0f, z);
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha1))
+            if (WasPressedThisFrame(Key.Digit1, Key.Numpad1))
             {
-                manager.PlayUI(uiClip);
+                manager.PlayUI(UiEventId);
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha2))
+            if (WasPressedThisFrame(Key.Digit2, Key.Numpad2))
             {
-                manager.PlaySFX(sfxClip, follow: movingEmitter);
+                manager.PlaySFX(SfxEventId, movingEmitter.position);
+                var handle = manager.PlaySFX(SfxEventId, follow: movingEmitter);
+                if (handle.IsValid)
+                {
+                    handle.SetFollowTarget(movingEmitter);
+                }
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha3))
+            if (WasPressedThisFrame(Key.Digit3, Key.Numpad3))
             {
                 if (musicHandle.IsValid)
                 {
@@ -92,14 +97,31 @@ namespace AudioManagement
                 }
                 else
                 {
-                    musicHandle = manager.PlayMusic(musicClip, 0.35f, 0.35f);
+                    musicHandle = manager.PlayMusic(MusicEventId, 0.35f, 0.35f);
                 }
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha4))
+            if (WasPressedThisFrame(Key.Digit4, Key.Numpad4))
             {
                 paused = !paused;
                 manager.PauseAll(paused);
+            }
+
+            if (WasPressedThisFrame(Key.Digit5, Key.Numpad5))
+            {
+                menuSnapshot = !menuSnapshot;
+                manager.TransitionToSnapshot(menuSnapshot ? "Menu" : "Gameplay", 0.25f);
+            }
+
+            if (WasPressedThisFrame(Key.Digit6, Key.Numpad6))
+            {
+                manager.TransitionToSnapshot("Muffled", 0.25f);
+            }
+
+            if (WasPressedThisFrame(Key.Digit7, Key.Numpad7))
+            {
+                manager.TransitionToSnapshot("Default", 0.25f);
+                menuSnapshot = false;
             }
         }
 
@@ -108,42 +130,85 @@ namespace AudioManagement
             const float x = 16f;
             var y = 16f;
 
-            GUI.Label(new Rect(x, y, 520f, 24f), "Audio Demo Scene (keys: 1=UI, 2=SFX follow, 3=Music toggle, 4=Pause/Resume)");
+            GUI.Label(new Rect(x, y, 800f, 24f), "Audio Demo (Input System): 1=UI, 2=3D SFX follow, 3=Music toggle, 4=Pause, 5=Menu snapshot, 6=Muffled, 7=Default");
             y += 28f;
 
-            if (GUI.Button(new Rect(x, y, 180f, 28f), "Play UI (1)"))
+            if (GUI.Button(new Rect(x, y, 220f, 28f), "Play UI (1)"))
             {
-                AudioManager.Instance?.PlayUI(uiClip);
+                AudioManager.Instance?.PlayUI(UiEventId);
             }
 
             y += 34f;
-            if (GUI.Button(new Rect(x, y, 180f, 28f), "Play 3D SFX (2)"))
+            if (GUI.Button(new Rect(x, y, 220f, 28f), "Play 3D SFX Follow (2)"))
             {
-                AudioManager.Instance?.PlaySFX(sfxClip, follow: movingEmitter);
+                var manager = AudioManager.Instance;
+                if (manager != null)
+                {
+                    var handle = manager.PlaySFX(SfxEventId, follow: movingEmitter);
+                    if (handle.IsValid)
+                    {
+                        handle.SetFollowTarget(movingEmitter);
+                    }
+                }
             }
 
             y += 34f;
-            if (GUI.Button(new Rect(x, y, 180f, 28f), "Toggle Music (3)"))
+            if (GUI.Button(new Rect(x, y, 220f, 28f), "Toggle Music (3)"))
             {
+                var manager = AudioManager.Instance;
+                if (manager == null)
+                {
+                    return;
+                }
+
                 if (musicHandle.IsValid)
                 {
-                    AudioManager.Instance?.Stop(musicHandle, 0.35f);
+                    manager.Stop(musicHandle, 0.35f);
                     musicHandle = AudioHandle.Invalid;
                 }
                 else
                 {
-                    musicHandle = AudioManager.Instance != null
-                        ? AudioManager.Instance.PlayMusic(musicClip, 0.35f, 0.35f)
-                        : AudioHandle.Invalid;
+                    musicHandle = manager.PlayMusic(MusicEventId, 0.35f, 0.35f);
                 }
             }
 
             y += 34f;
-            if (GUI.Button(new Rect(x, y, 180f, 28f), paused ? "Resume (4)" : "Pause (4)"))
+            if (GUI.Button(new Rect(x, y, 220f, 28f), paused ? "Resume (4)" : "Pause (4)"))
             {
                 paused = !paused;
                 AudioManager.Instance?.PauseAll(paused);
             }
+
+            y += 34f;
+            if (GUI.Button(new Rect(x, y, 220f, 28f), menuSnapshot ? "Gameplay Snapshot (5)" : "Menu Snapshot (5)"))
+            {
+                menuSnapshot = !menuSnapshot;
+                AudioManager.Instance?.TransitionToSnapshot(menuSnapshot ? "Menu" : "Gameplay", 0.25f);
+            }
+
+            y += 34f;
+            if (GUI.Button(new Rect(x, y, 220f, 28f), "Muffled Snapshot (6)"))
+            {
+                AudioManager.Instance?.TransitionToSnapshot("Muffled", 0.25f);
+            }
+
+            y += 34f;
+            if (GUI.Button(new Rect(x, y, 220f, 28f), "Default Snapshot (7)"))
+            {
+                menuSnapshot = false;
+                AudioManager.Instance?.TransitionToSnapshot("Default", 0.25f);
+            }
+        }
+
+        private static bool WasPressedThisFrame(Key mainKey, Key altKey)
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard == null)
+            {
+                return false;
+            }
+
+            return keyboard[mainKey].wasPressedThisFrame || keyboard[altKey].wasPressedThisFrame;
         }
 
         private static void EnsureAudioManager()
@@ -155,55 +220,6 @@ namespace AudioManagement
 
             var go = new GameObject("AudioManager");
             go.AddComponent<AudioManager>();
-        }
-
-        private static AudioClip CreateTone(string name, float frequency, float durationSeconds, float amplitude)
-        {
-            var sampleRate = 44100;
-            var sampleCount = Mathf.Max(1, Mathf.CeilToInt(durationSeconds * sampleRate));
-            var data = new float[sampleCount];
-            var attackSamples = Mathf.Max(1, Mathf.CeilToInt(sampleRate * 0.005f));
-            var releaseSamples = Mathf.Max(1, Mathf.CeilToInt(sampleRate * 0.01f));
-
-            for (var i = 0; i < sampleCount; i++)
-            {
-                var t = i / (float)sampleRate;
-                var envelope = 1f;
-                if (i < attackSamples)
-                {
-                    envelope = i / (float)attackSamples;
-                }
-                else if (i > sampleCount - releaseSamples)
-                {
-                    envelope = (sampleCount - i) / (float)releaseSamples;
-                }
-
-                data[i] = Mathf.Sin(2f * Mathf.PI * frequency * t) * amplitude * Mathf.Clamp01(envelope);
-            }
-
-            var clip = AudioClip.Create(name, sampleCount, 1, sampleRate, false);
-            clip.SetData(data, 0);
-            return clip;
-        }
-
-        private static AudioClip CreateMusicLoop(string name, float durationSeconds, float amplitude)
-        {
-            var sampleRate = 44100;
-            var sampleCount = Mathf.Max(1, Mathf.CeilToInt(durationSeconds * sampleRate));
-            var data = new float[sampleCount];
-
-            for (var i = 0; i < sampleCount; i++)
-            {
-                var t = i / (float)sampleRate;
-                var toneA = Mathf.Sin(2f * Mathf.PI * 220f * t) * 0.65f;
-                var toneB = Mathf.Sin(2f * Mathf.PI * 330f * t) * 0.35f;
-                var toneC = Mathf.Sin(2f * Mathf.PI * 165f * t) * 0.25f;
-                data[i] = (toneA + toneB + toneC) * amplitude;
-            }
-
-            var clip = AudioClip.Create(name, sampleCount, 1, sampleRate, false);
-            clip.SetData(data, 0);
-            return clip;
         }
     }
 }

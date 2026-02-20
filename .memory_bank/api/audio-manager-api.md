@@ -6,7 +6,9 @@
 - `AudioHandle PlayMusic(SoundEvent evt, float fadeIn = 0.5f, float crossfade = 0.5f, bool restartIfSame = false)`
 - `AudioHandle PlayUI(string id)`
 - `AudioHandle PlaySFX(string id, Vector3 position)`
+- `AudioHandle PlaySFX(string id, Transform follow)`
 - `AudioHandle PlayMusic(string id)`
+- `AudioHandle PlayMusic(string id, float fadeIn, float crossfade, bool restartIfSame = false)`
 - `AudioHandle PlayUI(AudioClip clip, float volumeMul = 1f, float pitchMul = 1f)`
 - `AudioHandle PlaySFX(AudioClip clip, Vector3? position = null, Transform follow = null, float volumeMul = 1f, float pitchMul = 1f)`
 - `AudioHandle PlayMusic(AudioClip clip, float fadeIn = 0.5f, float crossfade = 0.5f)`
@@ -22,6 +24,8 @@
 ## Lifecycle
 - `void Stop(AudioHandle handle, float fadeOut = 0f)`
 - `void StopAllSFX(float fadeOut = 0f)`
+- `int StopByEventId(string id, float fadeOut = 0f)`
+- `int StopByEvent(SoundEvent evt, float fadeOut = 0f)`
 - `void StopMusic(float fadeOut = 0f)`
 - `void PauseAll(bool pause)`
 

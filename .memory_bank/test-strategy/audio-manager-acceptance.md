@@ -16,3 +16,13 @@
 - Потеря/возврат фокуса приложения.
 - `Time.timeScale = 0` и поведение UI-звуков.
 - Сохранение/восстановление пользовательских громкостей между запусками.
+
+## Execution Status
+- Headless check (Unity batchmode, временная копия проекта): `Done`
+  - `AudioManagementEditor.AudioProductionSetup.GenerateProductionAssetsBatch`
+  - `AudioManagementEditor.AudioValidator.ValidateSoundEvents` -> passed with no issues
+- Manual play-mode + profiler pass in main project: `Pending`
+  - Flood 200 calls/sec
+  - Crossfade artifact check
+  - Snapshot/Pause interactive behavior
+  - Volume persistence across restart

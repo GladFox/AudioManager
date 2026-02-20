@@ -14,6 +14,7 @@ namespace AudioManagementEditor
             var config = LoadPrimaryConfig();
             var guids = AssetDatabase.FindAssets("t:SoundEvent");
             var idMap = new Dictionary<string, SoundEvent>();
+            var requiredSnapshots = new[] { "Default", "Gameplay", "Menu", "Pause", "Muffled" };
 
             var errors = 0;
             var warnings = 0;
@@ -59,6 +60,29 @@ namespace AudioManagementEditor
             {
                 warnings++;
                 Debug.LogWarning("[AudioValidator] AudioConfig not found. Bus routing checks were skipped.");
+            }
+            else
+            {
+                if (config.Mixer == null)
+                {
+                    errors++;
+                    Debug.LogError("[AudioValidator] AudioConfig has no AudioMixer assigned.", config);
+                }
+
+                for (var i = 0; i < requiredSnapshots.Length; i++)
+                {
+                    if (!config.TryGetSnapshot(requiredSnapshots[i], out _, out _))
+                    {
+                        warnings++;
+                        Debug.LogWarning($"[AudioValidator] AudioConfig is missing snapshot '{requiredSnapshots[i]}'.", config);
+                    }
+                }
+
+                if (config.SoundEvents == null || config.SoundEvents.Length == 0)
+                {
+                    warnings++;
+                    Debug.LogWarning("[AudioValidator] AudioConfig has empty SoundEvents catalog.", config);
+                }
             }
 
             if (errors == 0 && warnings == 0)

@@ -8,18 +8,32 @@
 - Music A/B каналы с fade/crossfade и поддержкой stop/pause.
 - `AudioHandle` для runtime управления playback.
 - `UIButtonSound`, `AudioSceneEmitter`, `AudioValidator`, `AudioDebuggerWindow`.
-- Тестовая сцена `AudioDemoScene` с рабочим runtime-демо `PlayUI/PlaySFX/PlayMusic/PauseAll`.
+- `AudioProductionSetup` для автоматической генерации production audio assets.
+- Тестовая сцена `AudioDemoScene` с рабочим runtime-демо `PlayUI/PlaySFX/PlayMusic/PauseAll/Snapshots`.
+- Перевод demo hotkeys на новую Input System.
+- Версионирование продукта: `bundleVersion = 0.0.1`.
+- Подготовлены релизные документы:
+  - `README.md`
+  - `RELEASE_NOTES.md`
+  - `EFFORT_REPORT_0.0.1.md`
+- Headless Unity валидация в временной копии проекта:
+  - production setup выполнен успешно;
+  - validator passed with no issues.
 
 ## В работе
-- Runtime acceptance в Unity Profiler и заполнение метрик по производительности.
+- Manual acceptance в основном проекте (Unity Play Mode + Profiler) для подтверждения non-functional требований.
 
 ## Известные проблемы
-- Не выполнен runtime прогон в Unity Editor в рамках CLI-сессии (требуется ручной запуск редактора).
+- Основной проект сейчас открыт в Unity, поэтому batchmode-проверки по этому же `projectPath` блокируются lock-файлом.
+- Финальные метрики flood/perf и субъективные аудио-артефакты (click/pop) требуют ручного прогона в редакторе.
 - Требуется подтверждение продуктовых решений по Addressables/WebGL.
 
 ## Эволюция решений
-- От placeholder-документации к полной реализации data-driven AudioManager с docs-first процессом и multi-agent ролями.
+- От базовой реализации к production-базису:
+  - стабилизирован API (`StopByEventId`, id-overloads, pause merge policy);
+  - добавлен автоматический bootstrap ассетов и mixer;
+  - выполнен formal compliance review против базового ТЗ.
 
 ## Контроль изменений
-last_checked_commit: d6ce1cbf27be39a1054f475db02474feb9291786
-last_checked_date: 2026-02-20 03:56:46 +0700
+last_checked_commit: 19f94170a0ff87f01691e6422acc9941d78ebe1a
+last_checked_date: 2026-02-20 09:54:02 +0700
