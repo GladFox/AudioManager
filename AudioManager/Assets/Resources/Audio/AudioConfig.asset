@@ -75,7 +75,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9487a314eaa9741bf9f22dfaad1f1e6b, type: 2}
   - {fileID: 11400000, guid: e3cd4e4d13a9f4fb6b9379605b4365e9, type: 2}
   - {fileID: 11400000, guid: 0fc84a61da31346608c5bb787431d5ed, type: 2}
+  banks: []
   enableDebugLogs: 1
+  enableAddressablesLogs: 0
+  onDemandPlayPolicy: 1
+  unloadDelaySeconds: 15
   pauseSfxAndMusicOnFocusLost: 1
   pauseSfxAndMusicOnApplicationPause: 1
   uiAlwaysUnscaled: 1

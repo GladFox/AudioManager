@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 namespace AudioManagement
 {
@@ -7,9 +8,9 @@ namespace AudioManagement
     public sealed class SoundEvent : ScriptableObject
     {
         [Serializable]
-        public struct WeightedClip
+        public struct WeightedClipReference
         {
-            public AudioClip Clip;
+            public AssetReferenceT<AudioClip> Reference;
             [Min(0.001f)] public float Weight;
         }
 
@@ -18,8 +19,8 @@ namespace AudioManagement
 
         [Header("Content")]
         [SerializeField] private ClipSelectionMode clipSelection = ClipSelectionMode.Random;
-        [SerializeField] private AudioClip[] clips = Array.Empty<AudioClip>();
-        [SerializeField] private WeightedClip[] weightedClips = Array.Empty<WeightedClip>();
+        [SerializeField] private AssetReferenceT<AudioClip>[] clipReferences = Array.Empty<AssetReferenceT<AudioClip>>();
+        [SerializeField] private WeightedClipReference[] weightedClipReferences = Array.Empty<WeightedClipReference>();
 
         [Header("Routing")]
         [SerializeField] private AudioBus mixerBus = AudioBus.Sfx;
@@ -55,8 +56,8 @@ namespace AudioManagement
 
         public string Id => id;
         public ClipSelectionMode ClipSelection => clipSelection;
-        public AudioClip[] Clips => clips;
-        public WeightedClip[] WeightedClips => weightedClips;
+        public AssetReferenceT<AudioClip>[] ClipReferences => clipReferences;
+        public WeightedClipReference[] WeightedClipReferences => weightedClipReferences;
         public AudioBus MixerBus => mixerBus;
         public float Volume => volume;
         public Vector2 PitchRange => pitchRange;

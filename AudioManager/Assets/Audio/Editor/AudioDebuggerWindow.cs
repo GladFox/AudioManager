@@ -62,6 +62,8 @@ namespace AudioManagementEditor
             EditorGUILayout.LabelField("3D In Use", manager.Pool3DInUse.ToString());
             EditorGUILayout.LabelField("3D Total", manager.Pool3DTotal.ToString());
             EditorGUILayout.LabelField("Active Voices", manager.ActiveVoiceCount.ToString());
+            EditorGUILayout.LabelField("Sound Enabled", manager.SoundEnabled.ToString());
+            EditorGUILayout.LabelField("Music Enabled", manager.MusicEnabled.ToString());
 
             manager.GetDebugAudioClips(allDebugClips, includeCatalog: true, includeActiveVoices: true);
             manager.GetDebugAudioClips(activeDebugClips, includeCatalog: false, includeActiveVoices: true);
@@ -74,6 +76,10 @@ namespace AudioManagementEditor
             EditorGUILayout.LabelField("Playing Clips (unique)", activeDebugClips.Count.ToString());
             EditorGUILayout.LabelField("Loaded Clips Memory", EditorUtility.FormatBytes(totalAudioBytes));
             EditorGUILayout.LabelField("Playing Clips Memory", EditorUtility.FormatBytes(activeAudioBytes));
+            EditorGUILayout.LabelField("Addressables Loaded", manager.LoadedAddressableClipCount.ToString());
+            EditorGUILayout.LabelField("Addressables Loading", manager.LoadingAddressableClipCount.ToString());
+            EditorGUILayout.LabelField("Addressables Failed", manager.FailedAddressableClipCount.ToString());
+            EditorGUILayout.LabelField("Audio Scopes", manager.ActiveAudioScopeCount.ToString());
 
             EditorGUILayout.Space();
             using (new EditorGUILayout.HorizontalScope())
@@ -86,6 +92,19 @@ namespace AudioManagementEditor
                 if (GUILayout.Button("Resume SFX/Music"))
                 {
                     manager.PauseAll(false);
+                }
+            }
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("Sound OFF"))
+                {
+                    manager.SetSoundEnabled(false);
+                }
+
+                if (GUILayout.Button("Sound ON"))
+                {
+                    manager.SetSoundEnabled(true);
                 }
             }
 

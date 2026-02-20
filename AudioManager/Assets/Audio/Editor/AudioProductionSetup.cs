@@ -17,6 +17,8 @@ namespace AudioManagementEditor
         private const string ConfigPath = "Assets/Resources/Audio/AudioConfig.asset";
         private const string ClipsFolder = "Assets/Audio/Data/GeneratedClips";
         private const string EventsFolder = "Assets/Audio/Data/SoundEvents";
+        private const string BanksFolder = "Assets/Audio/Data/Banks";
+        private const string DemoBankPath = "Assets/Audio/Data/Banks/DemoDialogueBank.asset";
 
         private static readonly (AudioBus Bus, string GroupName, string ExposedName)[] BusBindings =
         {
@@ -129,6 +131,7 @@ namespace AudioManagementEditor
         {
             Directory.CreateDirectory(Path.Combine(Application.dataPath, "Audio/Data"));
             Directory.CreateDirectory(Path.Combine(Application.dataPath, "Audio/Data/SoundEvents"));
+            Directory.CreateDirectory(Path.Combine(Application.dataPath, "Audio/Data/Banks"));
             Directory.CreateDirectory(Path.Combine(Application.dataPath, "Audio/Data/GeneratedClips"));
             Directory.CreateDirectory(Path.Combine(Application.dataPath, "Resources/Audio"));
         }
@@ -348,9 +351,9 @@ namespace AudioManagementEditor
         {
             var clips = new Dictionary<string, AudioClip>(StringComparer.OrdinalIgnoreCase)
             {
-                ["demo.ui.click"] = EnsureToneClip("UI_Click", 1320f, 0.08f, 0.20f, false),
-                ["demo.sfx.moving"] = EnsureToneClip("SFX_Moving", 440f, 0.28f, 0.25f, false),
-                ["demo.music.loop"] = EnsureMusicLoopClip("Music_Loop", 6f, 0.09f, true)
+                ["demo.ui.click"] = EnsureToneClip("UI_Click", 1320f, 0.08f, 0.20f),
+                ["demo.sfx.moving"] = EnsureToneClip("SFX_Moving", 440f, 0.28f, 0.25f),
+                ["demo.music.loop"] = EnsureMusicLoopClip("Music_Loop", 6f, 0.09f)
             };
 
             return clips;
@@ -485,7 +488,30 @@ namespace AudioManagementEditor
                 soundEventsProp.GetArrayElementAtIndex(i).objectReferenceValue = orderedEvents[i];
             }
 
+            var demoBank = EnsureDemoBankAsset(orderedEvents);
+            var banksProp = so.FindProperty("banks");
+            if (banksProp != null)
+            {
+                banksProp.arraySize = 1;
+                banksProp.GetArrayElementAtIndex(0).objectReferenceValue = demoBank;
+            }
+
             so.FindProperty("enableDebugLogs").boolValue = true;
+            var addressableLogs = so.FindProperty("enableAddressablesLogs");
+            if (addressableLogs != null)
+            {
+                addressableLogs.boolValue = true;
+            }
+            var onDemandPolicy = so.FindProperty("onDemandPlayPolicy");
+            if (onDemandPolicy != null)
+            {
+                onDemandPolicy.enumValueIndex = (int)OnDemandPlayPolicy.SkipIfNotLoaded;
+            }
+            var unloadDelay = so.FindProperty("unloadDelaySeconds");
+            if (unloadDelay != null)
+            {
+                unloadDelay.floatValue = 15f;
+            }
             so.FindProperty("pauseSfxAndMusicOnFocusLost").boolValue = true;
             so.FindProperty("pauseSfxAndMusicOnApplicationPause").boolValue = true;
             so.FindProperty("uiAlwaysUnscaled").boolValue = true;
@@ -502,8 +528,32 @@ namespace AudioManagementEditor
         {
             var scenes = EditorBuildSettings.scenes.ToList();
             AddSceneIfMissing(scenes, "Assets/Scenes/AudioDemoScene.unity");
-            AddSceneIfMissing(scenes, "Assets/Scenes/SampleScene.unity");
             EditorBuildSettings.scenes = scenes.ToArray();
+        }
+
+        private static AudioBank EnsureDemoBankAsset(SoundEvent[] events)
+        {
+            var bank = AssetDatabase.LoadAssetAtPath<AudioBank>(DemoBankPath);
+            if (bank == null)
+            {
+                bank = ScriptableObject.CreateInstance<AudioBank>();
+                AssetDatabase.CreateAsset(bank, DemoBankPath);
+            }
+
+            var so = new SerializedObject(bank);
+            so.FindProperty("bankId").stringValue = "demo.dialogue.bank";
+            so.FindProperty("loadWhenSoundEnabled").boolValue = true;
+            so.FindProperty("loadWhenMusicEnabled").boolValue = true;
+            var eventsProp = so.FindProperty("events");
+            eventsProp.arraySize = events.Length;
+            for (var i = 0; i < events.Length; i++)
+            {
+                eventsProp.GetArrayElementAtIndex(i).objectReferenceValue = events[i];
+            }
+
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(bank);
+            return bank;
         }
 
         private static void AddSceneIfMissing(List<EditorBuildSettingsScene> scenes, string path)
@@ -546,11 +596,18 @@ namespace AudioManagementEditor
             so.FindProperty("id").stringValue = id;
             so.FindProperty("clipSelection").enumValueIndex = (int)ClipSelectionMode.Random;
 
-            var clipsProp = so.FindProperty("clips");
-            clipsProp.arraySize = 1;
-            clipsProp.GetArrayElementAtIndex(0).objectReferenceValue = clip;
+            var clipPath = AssetDatabase.GetAssetPath(clip);
+            var clipGuid = string.IsNullOrEmpty(clipPath) ? null : AssetDatabase.AssetPathToGUID(clipPath);
 
-            so.FindProperty("weightedClips").arraySize = 0;
+            var clipRefsProp = so.FindProperty("clipReferences");
+            clipRefsProp.arraySize = string.IsNullOrWhiteSpace(clipGuid) ? 0 : 1;
+            if (clipRefsProp.arraySize > 0)
+            {
+                SetAssetReference(clipRefsProp.GetArrayElementAtIndex(0), clipGuid);
+            }
+
+            var weightedProp = so.FindProperty("weightedClipReferences");
+            weightedProp.arraySize = 0;
             so.FindProperty("mixerBus").enumValueIndex = (int)bus;
             so.FindProperty("volume").floatValue = Mathf.Clamp01(volume);
             so.FindProperty("pitchRange").vector2Value = new Vector2(Mathf.Max(0.01f, pitchMin), Mathf.Max(0.01f, pitchMax));
@@ -572,7 +629,7 @@ namespace AudioManagementEditor
             return evt;
         }
 
-        private static AudioClip EnsureToneClip(string baseName, float frequency, float durationSeconds, float amplitude, bool loopable)
+        private static AudioClip EnsureToneClip(string baseName, float frequency, float durationSeconds, float amplitude)
         {
             var relativePath = Path.Combine(ClipsFolder, baseName + ".wav").Replace('\\', '/');
             var absolutePath = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
@@ -584,11 +641,12 @@ namespace AudioManagementEditor
             }
 
             AssetDatabase.ImportAsset(relativePath, ImportAssetOptions.ForceSynchronousImport);
-            ConfigureImportedClip(relativePath, loopable);
+            ConfigureImportedClip(relativePath);
+            EnsureAddressableEntry(relativePath);
             return AssetDatabase.LoadAssetAtPath<AudioClip>(relativePath);
         }
 
-        private static AudioClip EnsureMusicLoopClip(string baseName, float durationSeconds, float amplitude, bool loopable)
+        private static AudioClip EnsureMusicLoopClip(string baseName, float durationSeconds, float amplitude)
         {
             var relativePath = Path.Combine(ClipsFolder, baseName + ".wav").Replace('\\', '/');
             var absolutePath = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
@@ -600,11 +658,12 @@ namespace AudioManagementEditor
             }
 
             AssetDatabase.ImportAsset(relativePath, ImportAssetOptions.ForceSynchronousImport);
-            ConfigureImportedClip(relativePath, loopable);
+            ConfigureImportedClip(relativePath);
+            EnsureAddressableEntry(relativePath);
             return AssetDatabase.LoadAssetAtPath<AudioClip>(relativePath);
         }
 
-        private static void ConfigureImportedClip(string assetPath, bool loopable)
+        private static void ConfigureImportedClip(string assetPath)
         {
             var importer = AssetImporter.GetAtPath(assetPath) as AudioImporter;
             if (importer == null)
@@ -615,7 +674,6 @@ namespace AudioManagementEditor
             importer.forceToMono = true;
             importer.loadInBackground = false;
             importer.ambisonic = false;
-            importer.loopable = loopable;
 
             var settings = importer.defaultSampleSettings;
             settings.loadType = AudioClipLoadType.DecompressOnLoad;
@@ -704,6 +762,103 @@ namespace AudioManagementEditor
                 var sample = Mathf.Clamp(samples[i], -1f, 1f);
                 writer.Write((short)Mathf.RoundToInt(sample * short.MaxValue));
             }
+        }
+
+        private static void SetAssetReference(SerializedProperty property, string guid)
+        {
+            if (property == null)
+            {
+                return;
+            }
+
+            var guidProp = property.FindPropertyRelative("m_AssetGUID");
+            if (guidProp != null)
+            {
+                guidProp.stringValue = guid;
+            }
+
+            var subObjectNameProp = property.FindPropertyRelative("m_SubObjectName");
+            if (subObjectNameProp != null)
+            {
+                subObjectNameProp.stringValue = string.Empty;
+            }
+
+            var subObjectTypeProp = property.FindPropertyRelative("m_SubObjectType");
+            if (subObjectTypeProp != null)
+            {
+                subObjectTypeProp.stringValue = string.Empty;
+            }
+        }
+
+        private static void EnsureAddressableEntry(string assetPath)
+        {
+            var guid = AssetDatabase.AssetPathToGUID(assetPath);
+            if (string.IsNullOrWhiteSpace(guid))
+            {
+                return;
+            }
+
+            var defaultObjectType = Type.GetType("UnityEditor.AddressableAssets.AddressableAssetSettingsDefaultObject, Unity.Addressables.Editor");
+            if (defaultObjectType == null)
+            {
+                return;
+            }
+
+            var settingsProp = defaultObjectType.GetProperty("Settings", BindingFlags.Static | BindingFlags.Public);
+            var settings = settingsProp?.GetValue(null);
+            if (settings == null)
+            {
+                var getSettings = defaultObjectType.GetMethod("GetSettings", BindingFlags.Static | BindingFlags.Public, null, new[] { typeof(bool) }, null);
+                settings = getSettings?.Invoke(null, new object[] { true });
+                if (settings == null)
+                {
+                    return;
+                }
+            }
+
+            var settingsType = settings.GetType();
+            var defaultGroupProp = settingsType.GetProperty("DefaultGroup", BindingFlags.Instance | BindingFlags.Public);
+            var defaultGroup = defaultGroupProp?.GetValue(settings);
+            if (defaultGroup == null)
+            {
+                var findGroupMethod = settingsType.GetMethod("FindGroup", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { typeof(string) }, null);
+                defaultGroup = findGroupMethod?.Invoke(settings, new object[] { "Default Local Group" });
+            }
+
+            if (defaultGroup == null)
+            {
+                return;
+            }
+
+            var createOrMoveMethod = settingsType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                .FirstOrDefault(m => m.Name == "CreateOrMoveEntry" && m.GetParameters().Length >= 2);
+            if (createOrMoveMethod == null)
+            {
+                return;
+            }
+
+            var parameters = createOrMoveMethod.GetParameters();
+            var args = new object[parameters.Length];
+            args[0] = guid;
+            args[1] = defaultGroup;
+            for (var i = 2; i < parameters.Length; i++)
+            {
+                args[i] = parameters[i].ParameterType == typeof(bool) ? (object)false : null;
+            }
+
+            var entry = createOrMoveMethod.Invoke(settings, args);
+            if (entry != null)
+            {
+                var entryType = entry.GetType();
+                var addressProp = entryType.GetProperty("address", BindingFlags.Instance | BindingFlags.Public);
+                if (addressProp != null)
+                {
+                    var fileName = Path.GetFileNameWithoutExtension(assetPath);
+                    addressProp.SetValue(entry, fileName);
+                }
+            }
+
+            EditorUtility.SetDirty((UnityEngine.Object)settings);
         }
 
         private static object FindGroupByName(object root, string name, Type groupType)

@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Default Local Group
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Default Local Group
+  m_GUID: 172a0e91825a34a1b98bb3e21aaefc8a
+  m_SerializeEntries:
+  - m_GUID: 03d03c58e87a344e0b2d922151065f45
+    m_Address: Assets/Audio/Data/GeneratedClips/SFX_Moving.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 186d15a38ca9048a2a5d1f3d0faa0500
+    m_Address: Assets/Audio/Data/GeneratedClips/UI_Click.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 832c2f1e0a04c4053bb6c8b38a6ac1a6
+    m_Address: Assets/Audio/Data/GeneratedClips/Music_Loop.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: d3edc939b4aa34b07810c06efe54f4ab, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: aefc81c62353545aaa22420348384984, type: 2}
+    - {fileID: 11400000, guid: 3aadf81251c79499d96caee5b58b37ee, type: 2}

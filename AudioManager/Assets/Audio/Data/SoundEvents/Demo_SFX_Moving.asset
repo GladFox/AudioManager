@@ -14,9 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AudioManagement.SoundEvent
   id: demo.sfx.moving
   clipSelection: 0
-  clips:
-  - {fileID: 8300000, guid: 03d03c58e87a344e0b2d922151065f45, type: 3}
-  weightedClips: []
+  clipReferences:
+  - m_AssetGUID: 03d03c58e87a344e0b2d922151065f45
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_SubObjectGUID: 
+    m_EditorAssetChanged: 0
+  weightedClipReferences: []
   mixerBus: 2
   volume: 1
   pitchRange: {x: 0.95, y: 1.05}
