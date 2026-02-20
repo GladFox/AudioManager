@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using AudioManagement;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace AudioManagementEditor
 {
     public sealed class AudioDebuggerWindow : EditorWindow
     {
         private readonly List<AudioManager.DebugVoiceInfo> voices = new List<AudioManager.DebugVoiceInfo>(64);
+        private readonly List<AudioClip> allDebugClips = new List<AudioClip>(256);
+        private readonly List<AudioClip> activeDebugClips = new List<AudioClip>(128);
         private Vector2 scroll;
 
         [MenuItem("Tools/Audio/Debugger")]
@@ -60,6 +63,18 @@ namespace AudioManagementEditor
             EditorGUILayout.LabelField("3D Total", manager.Pool3DTotal.ToString());
             EditorGUILayout.LabelField("Active Voices", manager.ActiveVoiceCount.ToString());
 
+            manager.GetDebugAudioClips(allDebugClips, includeCatalog: true, includeActiveVoices: true);
+            manager.GetDebugAudioClips(activeDebugClips, includeCatalog: false, includeActiveVoices: true);
+            var totalAudioBytes = CalculateRuntimeClipMemory(allDebugClips);
+            var activeAudioBytes = CalculateRuntimeClipMemory(activeDebugClips);
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Audio Memory", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Loaded Clips (unique)", allDebugClips.Count.ToString());
+            EditorGUILayout.LabelField("Playing Clips (unique)", activeDebugClips.Count.ToString());
+            EditorGUILayout.LabelField("Loaded Clips Memory", EditorUtility.FormatBytes(totalAudioBytes));
+            EditorGUILayout.LabelField("Playing Clips Memory", EditorUtility.FormatBytes(activeAudioBytes));
+
             EditorGUILayout.Space();
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -93,6 +108,26 @@ namespace AudioManagementEditor
             }
 
             EditorGUILayout.EndScrollView();
+        }
+
+        private static long CalculateRuntimeClipMemory(List<AudioClip> clips)
+        {
+            if (clips == null)
+            {
+                return 0L;
+            }
+
+            long total = 0L;
+            for (var i = 0; i < clips.Count; i++)
+            {
+                var clip = clips[i];
+                if (clip != null)
+                {
+                    total += Profiler.GetRuntimeMemorySizeLong(clip);
+                }
+            }
+
+            return total;
         }
     }
 }

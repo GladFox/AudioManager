@@ -78,6 +78,7 @@ namespace AudioManagement
         private readonly Dictionary<SoundEvent, EventRuntimeState> eventState = new Dictionary<SoundEvent, EventRuntimeState>();
         private readonly Dictionary<int, ActiveVoice> activeVoices = new Dictionary<int, ActiveVoice>(128);
         private readonly List<FadeJob> fadeJobs = new List<FadeJob>(16);
+        private readonly HashSet<AudioClip> debugClipSet = new HashSet<AudioClip>();
 
         private AudioSourcePool pool2D;
         private AudioSourcePool pool3D;
@@ -558,6 +559,74 @@ namespace AudioManagement
                 var evtId = voice.Event != null ? voice.Event.Id : "<direct>";
                 var isPlaying = voice.Source != null && voice.Source.isPlaying;
                 buffer.Add(new DebugVoiceInfo(voice.HandleId, evtId, voice.Bus, voice.IsMusic, isPlaying));
+            }
+
+            return buffer.Count;
+        }
+
+        public int GetDebugAudioClips(List<AudioClip> buffer, bool includeCatalog = true, bool includeActiveVoices = true)
+        {
+            if (buffer == null)
+            {
+                return 0;
+            }
+
+            buffer.Clear();
+            debugClipSet.Clear();
+
+            if (includeCatalog && config != null && config.SoundEvents != null)
+            {
+                for (var i = 0; i < config.SoundEvents.Length; i++)
+                {
+                    var evt = config.SoundEvents[i];
+                    if (evt == null)
+                    {
+                        continue;
+                    }
+
+                    var clips = evt.Clips;
+                    if (clips != null)
+                    {
+                        for (var j = 0; j < clips.Length; j++)
+                        {
+                            var clip = clips[j];
+                            if (clip != null)
+                            {
+                                debugClipSet.Add(clip);
+                            }
+                        }
+                    }
+
+                    var weighted = evt.WeightedClips;
+                    if (weighted != null)
+                    {
+                        for (var j = 0; j < weighted.Length; j++)
+                        {
+                            var clip = weighted[j].Clip;
+                            if (clip != null)
+                            {
+                                debugClipSet.Add(clip);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (includeActiveVoices)
+            {
+                foreach (var kv in activeVoices)
+                {
+                    var clip = kv.Value.Source != null ? kv.Value.Source.clip : null;
+                    if (clip != null)
+                    {
+                        debugClipSet.Add(clip);
+                    }
+                }
+            }
+
+            foreach (var clip in debugClipSet)
+            {
+                buffer.Add(clip);
             }
 
             return buffer.Count;
