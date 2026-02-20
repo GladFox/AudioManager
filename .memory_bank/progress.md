@@ -15,8 +15,8 @@
 - Addressables dynamic loading архитектура продолжает работать после упаковки.
 
 ## В работе
-- Smoke-проверка импорта sample `Audio Manager Example` через Package Manager.
-- Подготовка PR с переносом полного demo-folder в `Samples~`.
+- Выпуск тега `upm/v0.1.1`.
+- Проверка установки пакета в чистом проекте по git dependency URL.
 
 ## Известные проблемы
 - Локальный `dotnet build` по `Assembly-CSharp.csproj` в рабочем проекте может использовать устаревшие csproj до Unity refresh.
@@ -28,7 +28,8 @@
   - сохранен публичный API без breaking changes;
   - release channel зафиксирован как `git tags only` для `0.1.x`;
   - demo-контент стандартизирован как пакетный sample, а не app-asset дубликат.
+  - релиз `0.1.1` зафиксировал UPM-first delivery и единый installation URL в документации.
 
 ## Контроль изменений
-last_checked_commit: 672b2080fd7215c8036b679eaed466e5f7a645b8
-last_checked_date: 2026-02-21 03:33:40 +0700
+last_checked_commit: cc4a01373278ca6ceb5accfed0a24101c23b59c8
+last_checked_date: 2026-02-21 03:41:29 +0700

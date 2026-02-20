@@ -1,6 +1,6 @@
 # AudioManager (UPM + Demo App)
 
-Стартовая UPM-версия: `0.1.0`  
+Стартовая UPM-версия: `0.1.1`  
 Release channel `0.1.x`: `git tags only`
 
 ## Что это
@@ -37,12 +37,17 @@ Release channel `0.1.x`: `git tags only`
   - `/AudioManager/Packages`
   - `/AudioManager/ProjectSettings`
 
+## UPM
+- Package path: `/upm/com.gladfox.audiomanager`
+- Git dependency URL:
+  - `https://github.com/GladFox/AudioManager.git?path=/upm/com.gladfox.audiomanager#upm/v0.1.1`
+
 ## Быстрый старт (demo app)
 1. Открой проект Unity (`/AudioManager`).
 2. Убедись, что в `Packages/manifest.json` подключен:
    - `com.gladfox.audiomanager: file:../../upm/com.gladfox.audiomanager`
 3. Импортируй sample `Audio Manager Example` из Package Manager.
-4. Открой `Assets/Samples/Audio Manager/0.1.0/Audio Manager Example/Demo/AudioDemoScene.unity`.
+4. Открой `Assets/Samples/Audio Manager/0.1.1/Audio Manager Example/Demo/AudioDemoScene.unity`.
 5. Запусти Play Mode и проверь:
    - preload overlay с прогрессом загрузки Addressables;
    - `1/2/3`: line playback (UI/3D follow/UI);

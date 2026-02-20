@@ -23,7 +23,7 @@ Add to your project's `Packages/manifest.json`:
 Use Unity Package Manager git URL format, for example:
 
 ```text
-https://github.com/GladFox/AudioManager.git?path=/upm/com.gladfox.audiomanager#upm/v0.1.0
+https://github.com/GladFox/AudioManager.git?path=/upm/com.gladfox.audiomanager#upm/v0.1.1
 ```
 
 ## Quick Start

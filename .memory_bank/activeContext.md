@@ -1,19 +1,19 @@
 # Active Context
 
 ## Текущее направление
-Закрепление UPM-модели: полный demo-контент переносится в package sample, consumer app остается контейнером проекта и зависимостей.
+Релизная стабилизация `0.1.1`: UPM sample-конфигурация зафиксирована, документация и release notes синхронизированы.
 
 ## Активные задачи
-- IMPLEMENTER: перенести `AudioManager/Assets/AudioManager` в `upm/com.gladfox.audiomanager/Samples~/AudioManager` целиком.
-- REVIEWER: проверить отсутствие устаревшего sample `Samples~/AudioDemo` и битых путей в docs/package metadata.
-- QA_TESTER: smoke-проверка импорта sample из Package Manager и запуска `AudioDemoScene`.
+- REVIEWER: контроль финальной консистентности версий (`README`, `package.json`, `CHANGELOG`, `RELEASE_NOTES`).
+- DOCS_WRITER: поддерживать единый UPM install URL для актуального тега.
+- QA_TESTER: smoke-проверка sample import после обновления до `0.1.1`.
 
 ## Последние изменения
-- Ветка `main` получила commit `672b208` с рефакторингом структуры примера.
-- Актуализируется модель demo: canonical source демо-ассетов хранится в package sample.
-- Удаляется дублирование между app `Assets/AudioManager` и `Samples~`.
+- В `main` смержен PR с переносом полного demo-контента в `Samples~/AudioManager`.
+- Версия пакета повышена до `0.1.1`.
+- Обновлены release notes и основной README, добавлена явная UPM git-ссылка для установки.
 
 ## Следующие шаги
-1. Обновить `package.json` sample path и sample README.
-2. Синхронизировать `README.md`, `local/README.md`, `.memory_bank/progress.md`.
-3. Выполнить commit/push в отдельной ветке и открыть PR в `main`.
+1. Создать git tag `upm/v0.1.1` после финальной smoke-проверки.
+2. Проверить пакетную установку по UPM URL в чистом Unity-проекте.
+3. Подготовить scope следующего релиза (`0.1.2`).

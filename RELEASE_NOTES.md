@@ -1,5 +1,27 @@
 # Release Notes
 
+## 0.1.1 - 2026-02-21
+
+### Изменено
+- Репозиторий доведен до стабильной UPM-модели поставки:
+  - библиотека публикуется как пакет `com.gladfox.audiomanager`;
+  - demo-контент вынесен в package sample `Samples~/AudioManager`.
+- Sample в UPM переведен на формат полного примера (`Audio Manager Example`):
+  - `Data` (mixer),
+  - `Demo` (scene + bootstrap + clips + sound events),
+  - `Resources` (`AudioConfig`).
+- Удален устаревший sample scaffold `Samples~/AudioDemo` в пакете.
+- Актуализированы документация и процессные файлы под новый путь примера и UPM flow.
+
+### Документация
+- Обновлен корневой `README.md`:
+  - добавлена явная ссылка на UPM git dependency;
+  - обновлен путь импорта sample для версии `0.1.1`.
+- Обновлены package docs:
+  - `upm/com.gladfox.audiomanager/README.md`
+  - `upm/com.gladfox.audiomanager/CHANGELOG.md`
+- Синхронизированы `local/README.md` и Memory Bank.
+
 ## 0.0.1 - 2026-02-20
 
 ### Добавлено
