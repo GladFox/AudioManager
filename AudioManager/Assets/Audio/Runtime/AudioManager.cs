@@ -1327,7 +1327,9 @@ namespace AudioManagement
                 {
                     if (job.StopOnComplete)
                     {
+                        // CompleteStop unregisters voice and removes all fade jobs for that handle.
                         CompleteStop(job.HandleId);
+                        continue;
                     }
 
                     fadeJobs.RemoveAt(i);
