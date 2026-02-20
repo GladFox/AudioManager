@@ -7,16 +7,16 @@
   - `SoundEvent`, `AudioConfig`, `AudioBank`;
   - `AudioProductionSetup`, `AudioValidator`, `AudioDebuggerWindow`.
 - Demo app подключает пакет как локальную `file:` dependency.
-- App-specific demo bootstrap сохранен в приложении и использует пакетный runtime API.
-- Package sample добавлен (`Samples~/AudioDemo`):
-  - scene,
-  - sample bootstrap script,
-  - usage README.
+- Полный demo-контент перенесен в package sample `Samples~/AudioManager`:
+  - `Data` (mixer),
+  - `Demo` (scene + bootstrap + clips + sound events),
+  - `Resources/Audio` (`AudioConfig.asset`).
+- App-проект больше не хранит дубли demo-контента в `Assets/AudioManager`.
 - Addressables dynamic loading архитектура продолжает работать после упаковки.
 
 ## В работе
-- Финальный ручной PlayMode прогон в основном (не временном) Unity проекте.
-- Подготовка PR и release tag `upm/v0.1.0`.
+- Smoke-проверка импорта sample `Audio Manager Example` через Package Manager.
+- Подготовка PR с переносом полного demo-folder в `Samples~`.
 
 ## Известные проблемы
 - Локальный `dotnet build` по `Assembly-CSharp.csproj` в рабочем проекте может использовать устаревшие csproj до Unity refresh.
@@ -26,8 +26,9 @@
 - От in-project библиотеки к package-модели:
   - четкое разделение `Library (UPM)` и `Consumer App`;
   - сохранен публичный API без breaking changes;
-  - release channel зафиксирован как `git tags only` для `0.1.x`.
+  - release channel зафиксирован как `git tags only` для `0.1.x`;
+  - demo-контент стандартизирован как пакетный sample, а не app-asset дубликат.
 
 ## Контроль изменений
-last_checked_commit: 2bffd1c10cee3910d1d4885015e0a9069be7e29f
-last_checked_date: 2026-02-21 03:00:18 +0700
+last_checked_commit: 672b2080fd7215c8036b679eaed466e5f7a645b8
+last_checked_date: 2026-02-21 03:33:40 +0700

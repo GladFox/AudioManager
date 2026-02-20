@@ -1,31 +1,19 @@
 # Active Context
 
 ## Текущее направление
-Реализация UPM-модели завершена: библиотека вынесена в пакет `com.gladfox.audiomanager`, Unity-проект работает как demo consumer app.
+Закрепление UPM-модели: полный demo-контент переносится в package sample, consumer app остается контейнером проекта и зависимостей.
 
 ## Активные задачи
-- REVIEWER: финальная проверка переноса runtime/editor кода в пакет и отсутствия дублей в app.
-- QA_TESTER: ручной PlayMode прогон в основном проекте (UI/SFX/Music/Addressables/Snapshots).
-- DOCS_WRITER: подготовить release notes для package `0.1.0` и tag plan.
+- IMPLEMENTER: перенести `AudioManager/Assets/AudioManager` в `upm/com.gladfox.audiomanager/Samples~/AudioManager` целиком.
+- REVIEWER: проверить отсутствие устаревшего sample `Samples~/AudioDemo` и битых путей в docs/package metadata.
+- QA_TESTER: smoke-проверка импорта sample из Package Manager и запуска `AudioDemoScene`.
 
 ## Последние изменения
-- Создан UPM пакет в `/upm/com.gladfox.audiomanager`:
-  - `package.json`, `README.md`, `CHANGELOG.md`, `LICENSE.md`;
-  - `Runtime/` + `Editor/` + asmdef.
-- Библиотечные скрипты перенесены из `AudioManager/Assets/Audio/*` в пакет с сохранением `.meta`.
-- Demo app подключен к локальному пакету:
-  - `AudioManager/Packages/manifest.json` -> `com.gladfox.audiomanager: file:../../upm/com.gladfox.audiomanager`.
-- Оставлен app-specific сценарий:
-  - `AudioManager/Assets/Audio/Runtime/Components/AudioDemoSceneBootstrap.cs`.
-- Добавлен package sample:
-  - `Samples~/AudioDemo` (scene + sample bootstrap + README).
-- Обновлены архитектурные документы:
-  - `local/README.md`, `README.md`, `.memory_bank/systemPatterns.md`.
-- Unity batch validation в временной копии прошла успешно:
-  - `AudioProductionSetup.GenerateProductionAssetsBatch`;
-  - `AudioValidator.ValidateSoundEvents` (passed).
+- Ветка `main` получила commit `672b208` с рефакторингом структуры примера.
+- Актуализируется модель demo: canonical source демо-ассетов хранится в package sample.
+- Удаляется дублирование между app `Assets/AudioManager` и `Samples~`.
 
 ## Следующие шаги
-1. Выполнить финальный commit/push ветки `codex/upm-modularization`.
-2. Подготовить PR на merge в `main` с checklist UPM migration.
-3. После merge создать tag `upm/v0.1.0`.
+1. Обновить `package.json` sample path и sample README.
+2. Синхронизировать `README.md`, `local/README.md`, `.memory_bank/progress.md`.
+3. Выполнить commit/push в отдельной ветке и открыть PR в `main`.

@@ -41,10 +41,9 @@ Release channel `0.1.x`: `git tags only`
 1. Открой проект Unity (`/AudioManager`).
 2. Убедись, что в `Packages/manifest.json` подключен:
    - `com.gladfox.audiomanager: file:../../upm/com.gladfox.audiomanager`
-3. Выполни `Tools/Audio/Setup/Generate Production Assets`.
-4. Убедись, что в проекте создан `Assets/Resources/Audio/AudioConfig.asset`.
-5. Открой `Assets/Scenes/AudioDemoScene.unity`.
-6. Запусти Play Mode и проверь:
+3. Импортируй sample `Audio Manager Example` из Package Manager.
+4. Открой `Assets/Samples/Audio Manager/0.1.0/Audio Manager Example/Demo/AudioDemoScene.unity`.
+5. Запусти Play Mode и проверь:
    - preload overlay с прогрессом загрузки Addressables;
    - `1/2/3`: line playback (UI/3D follow/UI);
    - `4`: music toggle;

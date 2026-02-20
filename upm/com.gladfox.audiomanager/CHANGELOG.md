@@ -8,4 +8,4 @@ All notable changes to this package will be documented in this file.
 - Centralized playback API and pooling infrastructure.
 - Addressables dynamic loading (`AudioContentService`, `AudioLoadHandle`, `AudioBank`).
 - Editor tooling (`AudioProductionSetup`, `AudioValidator`, `AudioDebuggerWindow`).
-- Package sample scaffold (`Samples~/AudioDemo`).
+- Package sample with full demo content folder (`Samples~/AudioManager`).

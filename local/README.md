@@ -11,19 +11,17 @@
 - `upm/com.gladfox.audiomanager/package.json`
 - `upm/com.gladfox.audiomanager/Runtime/*`
 - `upm/com.gladfox.audiomanager/Editor/*`
-- `upm/com.gladfox.audiomanager/Samples~/AudioDemo/*`
+- `upm/com.gladfox.audiomanager/Samples~/AudioManager/*`
 - `upm/com.gladfox.audiomanager/README.md`
 - `upm/com.gladfox.audiomanager/CHANGELOG.md`
 
 ### Demo App
-- `AudioManager/Assets/Scenes/AudioDemoScene.unity`
-- `AudioManager/Assets/Audio/Runtime/Components/AudioDemoSceneBootstrap.cs`
-- `AudioManager/Assets/Audio/Data/*` (mixer, clips, demo events)
-- `AudioManager/Assets/Resources/Audio/AudioConfig.asset`
+- `AudioManager/Assets/AddressableAssetsData/*`
+- `AudioManager/Assets/InputSystem_Actions.inputactions`
 - `AudioManager/Packages/manifest.json` (local `file:` package dependency)
 
 ## Architecture Decisions
-- Библиотечный код вынесен в UPM пакет; demo app содержит только пример использования и контент.
+- Библиотечный код вынесен в UPM пакет; demo контент поставляется через `Samples~`.
 - Публичный API и namespace сохранены (`AudioManagement`).
 - `SoundEvent` использует только Addressables references.
 - Dynamic loading реализован через `AudioContentService` + scope/ref-count + delayed unload.
@@ -40,8 +38,8 @@
 
 ## Demo Strategy
 Поддерживаются два варианта демонстрации:
-1. Standalone app demo (`AudioManager`).
-2. Package sample (`Samples~/AudioDemo`).
+1. Consumer app (`AudioManager`) как контейнер проекта/пакетов.
+2. Package sample (`Samples~/AudioManager`) как полный demo-контент.
 
 ## Setup & Validation
 - Setup ассетов: `Tools/Audio/Setup/Generate Production Assets`.

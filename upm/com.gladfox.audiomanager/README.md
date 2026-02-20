@@ -47,7 +47,8 @@ audio.PlayMusic("demo.music.loop", 0.35f, 0.35f);
 - `UnloadBank(...)` / `UnloadUnused()`
 
 ## Samples
-Import `Audio Demo` from Package Manager Samples and follow sample README.
+Import `Audio Manager Example` from Package Manager Samples.
+It contains the full demo content folder (`Data`, `Demo`, `Resources`) including `AudioDemoScene`.
 
 ## Release Channel
 For `0.1.x`, package releases are distributed via git tags only (`upm/vX.Y.Z`).

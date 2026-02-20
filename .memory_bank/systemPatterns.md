@@ -32,3 +32,5 @@
   Причина: переиспользуемость, независимое версионирование, понятный integration contract.
 - Решение: release channel для `0.1.x` — `git tags only` (`upm/vX.Y.Z`), без scoped registry.
   Причина: минимизация операционной сложности на старте package lifecycle.
+- Решение: полный demo-контент хранить в `upm/com.gladfox.audiomanager/Samples~/AudioManager`, не дублировать его в `AudioManager/Assets`.
+  Причина: единый источник example-ассетов для UPM и предсказуемый sample import flow через Package Manager.
