@@ -1,5 +1,14 @@
 {
   "dependencies": {
+    "com.gladfox.audiomanager": {
+      "version": "file:../../upm/com.gladfox.audiomanager",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.unity.addressables": "2.7.6",
+        "com.unity.ugui": "2.0.0"
+      }
+    },
     "com.unity.addressables": {
       "version": "2.7.6",
       "depth": 0,

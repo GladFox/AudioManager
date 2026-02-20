@@ -1,10 +1,14 @@
-# AudioManager (Unity)
+# AudioManager (UPM + Demo App)
 
-Версия продукта: `0.0.1`  
-Статус ветки разработки: `0.0.2` (Addressables dynamic loading)
+Стартовая UPM-версия: `0.1.0`  
+Release channel `0.1.x`: `git tags only`
 
 ## Что это
-`AudioManager` — централизованная аудиоподсистема для Unity-проекта: UI, SFX, Music, Ambience через единый API, `AudioMixer` и `Snapshots`.
+Репозиторий разделен на:
+- UPM библиотеку: `/upm/com.gladfox.audiomanager`
+- Unity demo приложение: `/AudioManager`
+
+Библиотека предоставляет централизованную аудиоподсистему Unity: UI, SFX, Music, Ambience через единый API, `AudioMixer` и `Snapshots`.
 
 ## Для чего нужно
 - убрать разрозненные вызовы `AudioSource.Play*` по проекту;
@@ -23,30 +27,24 @@
 - editor-инструменты: генерация production ассетов, валидация, runtime debugger;
 - демо-сцена с рабочим примером.
 
-## Состав
-- Runtime:
-  - `AudioManager`
-  - `AudioSourcePool`
-  - `AudioContentService`
-  - `AudioLoadHandle`
-  - `AudioHandle`
-  - `UIButtonSound`
-  - `AudioSceneEmitter`
-- Data:
-  - `SoundEvent` (SO)
-  - `AudioConfig` (SO)
-  - `AudioBank` (SO)
-- Editor:
-  - `AudioProductionSetup`
-  - `AudioValidator`
-  - `AudioDebuggerWindow`
+## Структура
+- UPM пакет:
+  - `/upm/com.gladfox.audiomanager/Runtime`
+  - `/upm/com.gladfox.audiomanager/Editor`
+  - `/upm/com.gladfox.audiomanager/Samples~`
+- Demo app:
+  - `/AudioManager/Assets`
+  - `/AudioManager/Packages`
+  - `/AudioManager/ProjectSettings`
 
-## Быстрый старт
-1. Открой проект Unity (`AudioManager/`).
-2. Выполни `Tools/Audio/Setup/Generate Production Assets`.
-3. Убедись, что в проекте создан `Assets/Resources/Audio/AudioConfig.asset`.
-4. Открой `Assets/Scenes/AudioDemoScene.unity`.
-5. Запусти Play Mode и проверь:
+## Быстрый старт (demo app)
+1. Открой проект Unity (`/AudioManager`).
+2. Убедись, что в `Packages/manifest.json` подключен:
+   - `com.gladfox.audiomanager: file:../../upm/com.gladfox.audiomanager`
+3. Выполни `Tools/Audio/Setup/Generate Production Assets`.
+4. Убедись, что в проекте создан `Assets/Resources/Audio/AudioConfig.asset`.
+5. Открой `Assets/Scenes/AudioDemoScene.unity`.
+6. Запусти Play Mode и проверь:
    - preload overlay с прогрессом загрузки Addressables;
    - `1/2/3`: line playback (UI/3D follow/UI);
    - `4`: music toggle;
@@ -68,3 +66,4 @@ audio.TransitionToSnapshot("Menu", 0.25f);
 - Архитектурный source of truth: `local/README.md`
 - Memory Bank: `.memory_bank/`
 - Релиз-ноты: `RELEASE_NOTES.md`
+- UPM package README: `upm/com.gladfox.audiomanager/README.md`

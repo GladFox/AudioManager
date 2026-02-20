@@ -1,67 +1,49 @@
 # AudioManager Architecture Source of Truth
 
 ## Summary
-Проект содержит production-ready аудиоподсистему Unity с централизованным `AudioManager`, `AudioMixer + Snapshots`, 2D/3D pooling и динамической загрузкой клипов через Addressables.
+Репозиторий разделен на библиотеку (`UPM package`) и приложение-потребитель (`Unity demo app`).
+
+- Library: `/upm/com.gladfox.audiomanager`
+- Demo App: `/AudioManager`
 
 ## Implemented Structure
-- `Assets/Audio/Data/AudioConfig.cs`
-- `Assets/Audio/Data/SoundEvent.cs`
-- `Assets/Audio/Data/AudioBank.cs`
-- `Assets/Audio/Runtime/AudioBus.cs`
-- `Assets/Audio/Runtime/AudioHandle.cs`
-- `Assets/Audio/Runtime/AudioLoadHandle.cs`
-- `Assets/Audio/Runtime/AudioContentService.cs`
-- `Assets/Audio/Runtime/AudioSourcePool.cs`
-- `Assets/Audio/Runtime/AudioManager.cs`
-- `Assets/Audio/Runtime/Components/UIButtonSound.cs`
-- `Assets/Audio/Runtime/Components/AudioSceneEmitter.cs`
-- `Assets/Audio/Runtime/Components/AudioDemoSceneBootstrap.cs`
-- `Assets/Audio/Editor/AudioProductionSetup.cs`
-- `Assets/Audio/Editor/AudioValidator.cs`
-- `Assets/Audio/Editor/AudioDebuggerWindow.cs`
-- `Assets/Resources/Audio/AudioConfig.asset`
-- `Assets/Audio/Data/Banks/*.asset`
-- `Assets/Scenes/AudioDemoScene.unity`
+### UPM Package
+- `upm/com.gladfox.audiomanager/package.json`
+- `upm/com.gladfox.audiomanager/Runtime/*`
+- `upm/com.gladfox.audiomanager/Editor/*`
+- `upm/com.gladfox.audiomanager/Samples~/AudioDemo/*`
+- `upm/com.gladfox.audiomanager/README.md`
+- `upm/com.gladfox.audiomanager/CHANGELOG.md`
+
+### Demo App
+- `AudioManager/Assets/Scenes/AudioDemoScene.unity`
+- `AudioManager/Assets/Audio/Runtime/Components/AudioDemoSceneBootstrap.cs`
+- `AudioManager/Assets/Audio/Data/*` (mixer, clips, demo events)
+- `AudioManager/Assets/Resources/Audio/AudioConfig.asset`
+- `AudioManager/Packages/manifest.json` (local `file:` package dependency)
 
 ## Architecture Decisions
-- `AudioManager` — единый facade API (`PlayUI/PlaySFX/PlayMusic`, preload/scope, stop/pause/snapshot/volume).
-- `SoundEvent` хранит только addressable-ссылки на клипы (`AssetReferenceT<AudioClip>[]` / weighted references), без сериализованных `AudioClip[]`.
-- `AudioContentService` управляет lifecycle адресуемых клипов: `Loading/Loaded/Failed/Unloaded`, preload, unload, progress, guard от double-load/release.
-- Для памяти используется модель scope/ref-count + delayed unload (`UnloadDelaySeconds`).
-- Политика on-demand playback: `SkipIfNotLoaded` (если клип не загружен, play пропускается без исключений).
-- Snapshot policy:
-  - в рамках одного кадра выигрывает больший `Priority`;
-  - между кадрами выигрывает последний запрос (last request wins).
+- Библиотечный код вынесен в UPM пакет; demo app содержит только пример использования и контент.
+- Публичный API и namespace сохранены (`AudioManagement`).
+- `SoundEvent` использует только Addressables references.
+- Dynamic loading реализован через `AudioContentService` + scope/ref-count + delayed unload.
+- On-demand policy для `0.1.x`: `SkipIfNotLoaded`.
+- Release channel для `0.1.x`: `git tags only` (`upm/vX.Y.Z`).
 
 ## Runtime Guarantees
-- Fail-safe: при отсутствии config/event/clip — warning log (при `EnableDebugLogs`) и graceful skip.
-- Play-path без `Instantiate/Destroy` в steady-state: звук идет через пулы или music A/B channels.
-- Анти-спам `SoundEvent`: `CooldownSeconds` + `MaxInstances`.
-- `AudioHandle` поддерживает `Stop/SetVolume/SetPitch/SetFollowTarget/IsValid`.
-- Громкости API `0..1` конвертируются в dB (`AudioConfig.MinDb..MaxDb`) и сохраняются через `PlayerPrefs`.
-- `SetSoundEnabled(false/true)` управляет остановкой/возобновлением и автопрелоадом банков для текущих настроек.
+- Fail-safe поведение при отсутствующем config/event/clip без исключений.
+- 2D/3D pooling без `Instantiate/Destroy` в steady-state.
+- Music restore после `Sound OFF -> ON` с ретраем до готовности контента.
+- Snapshot policy:
+  - в одном кадре выигрывает больший приоритет;
+  - между кадрами выигрывает последний запрос.
 
-## Production Setup
-- One-click генерация production ассетов:
-  - `Tools/Audio/Setup/Generate Production Assets`
-  - batch method: `AudioManagementEditor.AudioProductionSetup.GenerateProductionAssetsBatch`
-- Генерируется/обновляется:
-  - `AudioMain.mixer` (groups/snapshots/exposed params);
-  - demo WAV clips;
-  - demo `SoundEvent` assets с `AssetReferenceT<AudioClip>`;
-  - demo `AudioBank`;
-  - `Assets/Resources/Audio/AudioConfig.asset`;
-  - Addressables entry для demo clip assets;
-  - build settings с `AudioDemoScene`.
+## Demo Strategy
+Поддерживаются два варианта демонстрации:
+1. Standalone app demo (`AudioManager`).
+2. Package sample (`Samples~/AudioDemo`).
 
-## Demo Scene
-- `Assets/Scenes/AudioDemoScene.unity` содержит сценарий preload диалоговых звуков с блокирующим overlay и progress.
-- `AudioDemoSceneBootstrap` использует новую Input System (`UnityEngine.InputSystem.Keyboard`).
-- Горячие клавиши:
-  - `1` line 1 (UI)
-  - `2` line 2 (3D follow SFX)
-  - `3` line 3 (UI)
-  - `4` music toggle
-  - `5` pause/resume
-  - `6` menu/gameplay snapshot toggle
-  - `7` sound on/off (с повторной дозагрузкой)
+## Setup & Validation
+- Setup ассетов: `Tools/Audio/Setup/Generate Production Assets`.
+- Validation: `Tools/Audio/Validate Sound Events`.
+- Runtime diagnostics: `Tools/Audio/Debugger`.
