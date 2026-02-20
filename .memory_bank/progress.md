@@ -49,5 +49,5 @@
   - on-demand поведение `SkipIfNotLoaded`.
 
 ## Контроль изменений
-last_checked_commit: af7e6e2cb4231201de7dc23194d22c9455a6bb14
-last_checked_date: 2026-02-21 01:13:37 +0700
+last_checked_commit: e1e0845afe0b406a4925b0a9bcc3d0d9347bcb73
+last_checked_date: 2026-02-21 01:47:39 +0700
