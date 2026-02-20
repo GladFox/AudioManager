@@ -20,9 +20,9 @@
   },
   "samples": [
     {
-      "displayName": "Audio Demo",
-      "description": "Demo scene and helper script showing package integration flow.",
-      "path": "Samples~/AudioDemo"
+      "displayName": "Audio Manager Example",
+      "description": "Full demo content folder (scene, bootstrap, mixer, sound events, clips, config).",
+      "path": "Samples~/AudioManager"
     }
   ]
 }
