@@ -11,6 +11,11 @@
 - `AudioProductionSetup` для автоматической генерации production audio assets.
 - Тестовая сцена `AudioDemoScene` с рабочим runtime-демо `PlayUI/PlaySFX/PlayMusic/PauseAll/Snapshots`.
 - Перевод demo hotkeys на новую Input System.
+- Версионирование продукта: `bundleVersion = 0.0.1`.
+- Подготовлены релизные документы:
+  - `README.md`
+  - `RELEASE_NOTES.md`
+  - `EFFORT_REPORT_0.0.1.md`
 - Headless Unity валидация в временной копии проекта:
   - production setup выполнен успешно;
   - validator passed with no issues.
@@ -30,5 +35,5 @@
   - выполнен formal compliance review против базового ТЗ.
 
 ## Контроль изменений
-last_checked_commit: 374db935df57ecdf263e4629bd66adbafbae2a3e
-last_checked_date: 2026-02-20 04:37:00 +0700
+last_checked_commit: 19f94170a0ff87f01691e6422acc9941d78ebe1a
+last_checked_date: 2026-02-20 09:54:02 +0700
