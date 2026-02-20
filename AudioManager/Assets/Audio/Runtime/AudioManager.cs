@@ -25,6 +25,7 @@ namespace AudioManagement
         {
             public int HandleId;
             public AudioSource Source;
+            public AudioClip Clip;
             public AudioSourcePool.PooledSource PooledSource;
             public SoundEvent Event;
             public AudioBus Bus;
@@ -79,11 +80,16 @@ namespace AudioManagement
         private readonly Dictionary<int, ActiveVoice> activeVoices = new Dictionary<int, ActiveVoice>(128);
         private readonly List<FadeJob> fadeJobs = new List<FadeJob>(16);
         private readonly HashSet<AudioClip> debugClipSet = new HashSet<AudioClip>();
+        private readonly List<AudioClip> resolvedClips = new List<AudioClip>(16);
+        private readonly List<AudioContentService.WeightedLoadedClip> resolvedWeightedClips = new List<AudioContentService.WeightedLoadedClip>(16);
+        private readonly List<SoundEvent> preloadEventScratch = new List<SoundEvent>(32);
+        private readonly List<string> preloadIdScratch = new List<string>(32);
 
         private AudioSourcePool pool2D;
         private AudioSourcePool pool3D;
         private MusicChannel musicA;
         private MusicChannel musicB;
+        private AudioContentService contentService;
 
         private int nextHandleId = 1;
         private int activeSnapshotPriority;
@@ -93,6 +99,8 @@ namespace AudioManagement
         private bool userPauseRequested;
         private bool focusPauseRequested;
         private bool appPauseRequested;
+        private bool soundEnabled = true;
+        private bool musicEnabled = true;
         private uint rngState = 2463534242u;
         private float lastMasterVolumeBeforeMute = 1f;
 
@@ -103,6 +111,12 @@ namespace AudioManagement
         public int Pool3DInUse => pool3D != null ? pool3D.InUseCount : 0;
         public int Pool2DTotal => pool2D != null ? pool2D.TotalCount : 0;
         public int Pool3DTotal => pool3D != null ? pool3D.TotalCount : 0;
+        public int LoadedAddressableClipCount => contentService != null ? contentService.LoadedClipCount : 0;
+        public int LoadingAddressableClipCount => contentService != null ? contentService.LoadingClipCount : 0;
+        public int FailedAddressableClipCount => contentService != null ? contentService.FailedClipCount : 0;
+        public int ActiveAudioScopeCount => contentService != null ? contentService.ScopeCount : 0;
+        public bool SoundEnabled => soundEnabled;
+        public bool MusicEnabled => musicEnabled;
 
         private void Awake()
         {
@@ -128,19 +142,23 @@ namespace AudioManagement
                 }
             }
 
+            contentService = new AudioContentService(config != null && config.EnableAddressablesLogs);
             InitializeEventCatalog();
             InitializePools();
             InitializeMusicChannels();
             LoadAndApplyVolumes();
+            PreloadAutoBanksForCurrentSettings();
         }
 
         private void Update()
         {
             var dspTime = AudioSettings.dspTime;
             var deltaTime = Time.unscaledDeltaTime;
+            var realtime = Time.unscaledTime;
 
             pool2D?.Tick(dspTime, deltaTime);
             pool3D?.Tick(dspTime, deltaTime);
+            contentService?.Tick(realtime, config != null ? config.UnloadDelaySeconds : 15f);
 
             UpdateFadeJobs(deltaTime);
             CleanupFinishedMusic();
@@ -169,7 +187,17 @@ namespace AudioManagement
 
         public AudioHandle PlayMusic(SoundEvent evt, float fadeIn = 0.5f, float crossfade = 0.5f, bool restartIfSame = false)
         {
+            if (!musicEnabled)
+            {
+                return AudioHandle.Invalid;
+            }
+
             if (!ValidateConfigAndEvent(evt, "PlayMusic"))
+            {
+                return AudioHandle.Invalid;
+            }
+
+            if (!EnsureEventContentReady(evt, preloadIfMissing: true))
             {
                 return AudioHandle.Invalid;
             }
@@ -230,11 +258,13 @@ namespace AudioManagement
             {
                 HandleId = incomingHandle,
                 Source = incoming.Source,
+                Clip = incoming.Source.clip,
                 PooledSource = null,
                 Event = evt,
                 Bus = AudioBus.Music,
                 IsMusic = true
             });
+            contentService?.RegisterClipInUse(incoming.Source.clip);
 
             var targetVol = Mathf.Clamp01(evt.Volume);
             EnqueueFade(incomingHandle, incoming.Source, 0f, targetVol, Mathf.Max(0f, fadeIn), false);
@@ -254,6 +284,11 @@ namespace AudioManagement
 
         public AudioHandle PlayMusic(AudioClip clip, float fadeIn = 0.5f, float crossfade = 0.5f)
         {
+            if (!musicEnabled)
+            {
+                return AudioHandle.Invalid;
+            }
+
             if (config == null)
             {
                 LogWarn("PlayMusic(AudioClip) ignored because AudioConfig is not assigned.");
@@ -306,11 +341,13 @@ namespace AudioManagement
             {
                 HandleId = incomingHandle,
                 Source = incoming.Source,
+                Clip = incoming.Source.clip,
                 PooledSource = null,
                 Event = null,
                 Bus = AudioBus.Music,
                 IsMusic = true
             });
+            contentService?.RegisterClipInUse(incoming.Source.clip);
 
             EnqueueFade(incomingHandle, incoming.Source, 0f, 1f, Mathf.Max(0f, fadeIn), false);
             if (active.Source != null && active.Source.isPlaying)
@@ -344,6 +381,184 @@ namespace AudioManagement
         public AudioHandle PlayMusic(string id, float fadeIn, float crossfade, bool restartIfSame = false)
         {
             return TryGetEventById(id, out var evt) ? PlayMusic(evt, fadeIn, crossfade, restartIfSame) : AudioHandle.Invalid;
+        }
+
+        public AudioLoadHandle PreloadBank(string bankId)
+        {
+            if (config == null || config.Banks == null || string.IsNullOrWhiteSpace(bankId))
+            {
+                return AudioLoadHandle.Completed();
+            }
+
+            for (var i = 0; i < config.Banks.Length; i++)
+            {
+                var bank = config.Banks[i];
+                if (bank == null || !string.Equals(bank.BankId, bankId, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (!soundEnabled && !musicEnabled)
+                {
+                    return AudioLoadHandle.Completed();
+                }
+
+                return PreloadByEvents(bank.Events);
+            }
+
+            return AudioLoadHandle.Completed();
+        }
+
+        public AudioLoadHandle PreloadByEvents(IReadOnlyList<SoundEvent> events)
+        {
+            if (contentService == null || events == null || events.Count == 0)
+            {
+                return AudioLoadHandle.Completed();
+            }
+
+            preloadEventScratch.Clear();
+            for (var i = 0; i < events.Count; i++)
+            {
+                var evt = events[i];
+                if (evt != null && CanLoadEventForCurrentSettings(evt))
+                {
+                    preloadEventScratch.Add(evt);
+                }
+            }
+
+            if (preloadEventScratch.Count == 0)
+            {
+                return AudioLoadHandle.Completed();
+            }
+
+            return contentService.PreloadEvents(preloadEventScratch);
+        }
+
+        public AudioLoadHandle PreloadByIds(IReadOnlyList<string> ids)
+        {
+            if (ids == null || ids.Count == 0)
+            {
+                return AudioLoadHandle.Completed();
+            }
+
+            preloadEventScratch.Clear();
+            preloadIdScratch.Clear();
+            for (var i = 0; i < ids.Count; i++)
+            {
+                var id = ids[i];
+                if (string.IsNullOrWhiteSpace(id) || preloadIdScratch.Contains(id))
+                {
+                    continue;
+                }
+
+                preloadIdScratch.Add(id);
+                if (TryGetEventById(id, out var evt) && CanLoadEventForCurrentSettings(evt))
+                {
+                    preloadEventScratch.Add(evt);
+                }
+            }
+
+            if (preloadEventScratch.Count == 0)
+            {
+                return AudioLoadHandle.Completed();
+            }
+
+            return contentService.PreloadEvents(preloadEventScratch);
+        }
+
+        public AudioLoadHandle AcquireScope(string scopeId, IReadOnlyList<string> ids)
+        {
+            if (contentService == null || string.IsNullOrWhiteSpace(scopeId) || ids == null || ids.Count == 0)
+            {
+                return AudioLoadHandle.Completed();
+            }
+
+            preloadEventScratch.Clear();
+            preloadIdScratch.Clear();
+            for (var i = 0; i < ids.Count; i++)
+            {
+                var id = ids[i];
+                if (string.IsNullOrWhiteSpace(id) || preloadIdScratch.Contains(id))
+                {
+                    continue;
+                }
+
+                preloadIdScratch.Add(id);
+                if (TryGetEventById(id, out var evt) && CanLoadEventForCurrentSettings(evt))
+                {
+                    preloadEventScratch.Add(evt);
+                }
+            }
+
+            if (preloadEventScratch.Count == 0)
+            {
+                return AudioLoadHandle.Completed();
+            }
+
+            return contentService.AcquireScope(scopeId, preloadEventScratch);
+        }
+
+        public void ReleaseScope(string scopeId)
+        {
+            contentService?.ReleaseScope(scopeId);
+        }
+
+        public void UnloadUnused()
+        {
+            if (contentService == null)
+            {
+                return;
+            }
+
+            contentService.ReleaseAllScopes();
+            contentService.UnloadUnusedNow();
+        }
+
+        public void UnloadBank(string bankId)
+        {
+            if (contentService == null || config == null || config.Banks == null || string.IsNullOrWhiteSpace(bankId))
+            {
+                return;
+            }
+
+            for (var i = 0; i < config.Banks.Length; i++)
+            {
+                var bank = config.Banks[i];
+                if (bank == null || !string.Equals(bank.BankId, bankId, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                contentService.RequestUnloadEvents(bank.Events, immediate: false);
+                return;
+            }
+        }
+
+        public float GetLoadProgress(AudioLoadHandle handle)
+        {
+            return handle == null ? 1f : handle.Progress;
+        }
+
+        public void SetSoundEnabled(bool enabled)
+        {
+            if (soundEnabled == enabled && musicEnabled == enabled)
+            {
+                return;
+            }
+
+            soundEnabled = enabled;
+            musicEnabled = enabled;
+
+            if (!enabled)
+            {
+                StopAllSFX(0.05f);
+                StopMusic(0.2f);
+                contentService?.ReleaseAllScopes();
+                return;
+            }
+
+            contentService?.SetLogsEnabled(config != null && config.EnableAddressablesLogs);
+            PreloadAutoBanksForCurrentSettings();
         }
 
         public void SetMasterVolume01(float value)
@@ -574,40 +789,16 @@ namespace AudioManagement
             buffer.Clear();
             debugClipSet.Clear();
 
-            if (includeCatalog && config != null && config.SoundEvents != null)
+            if (includeCatalog && contentService != null)
             {
-                for (var i = 0; i < config.SoundEvents.Length; i++)
+                resolvedClips.Clear();
+                contentService.FillLoadedClips(resolvedClips);
+                for (var i = 0; i < resolvedClips.Count; i++)
                 {
-                    var evt = config.SoundEvents[i];
-                    if (evt == null)
+                    var clip = resolvedClips[i];
+                    if (clip != null)
                     {
-                        continue;
-                    }
-
-                    var clips = evt.Clips;
-                    if (clips != null)
-                    {
-                        for (var j = 0; j < clips.Length; j++)
-                        {
-                            var clip = clips[j];
-                            if (clip != null)
-                            {
-                                debugClipSet.Add(clip);
-                            }
-                        }
-                    }
-
-                    var weighted = evt.WeightedClips;
-                    if (weighted != null)
-                    {
-                        for (var j = 0; j < weighted.Length; j++)
-                        {
-                            var clip = weighted[j].Clip;
-                            if (clip != null)
-                            {
-                                debugClipSet.Add(clip);
-                            }
-                        }
+                        debugClipSet.Add(clip);
                     }
                 }
             }
@@ -658,9 +849,29 @@ namespace AudioManagement
             ApplyPauseState();
         }
 
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+
+            contentService?.ForceUnloadAll();
+        }
+
         private AudioHandle PlayEvent(SoundEvent evt, float volumeMul, float pitchMul, bool allowOverlap, Vector3? position, Transform follow, bool force2D)
         {
+            if (!soundEnabled)
+            {
+                return AudioHandle.Invalid;
+            }
+
             if (!ValidateConfigAndEvent(evt, "PlayEvent"))
+            {
+                return AudioHandle.Invalid;
+            }
+
+            if (!EnsureEventContentReady(evt, preloadIfMissing: true))
             {
                 return AudioHandle.Invalid;
             }
@@ -754,11 +965,13 @@ namespace AudioManagement
             {
                 HandleId = handleId,
                 Source = source,
+                Clip = source.clip,
                 PooledSource = pooled,
                 Event = evt,
                 Bus = bus,
                 IsMusic = false
             });
+            contentService?.RegisterClipInUse(source.clip);
 
             var runtime = GetOrCreateEventState(evt);
             runtime.ActiveInstances++;
@@ -771,6 +984,11 @@ namespace AudioManagement
 
         private AudioHandle PlayClipDirect(AudioClip clip, AudioBus bus, bool use3D, Vector3? position, Transform follow, float volumeMul, float pitchMul)
         {
+            if ((bus == AudioBus.Music && !musicEnabled) || (bus != AudioBus.Music && !soundEnabled))
+            {
+                return AudioHandle.Invalid;
+            }
+
             if (config == null)
             {
                 LogWarn("PlayClipDirect ignored because AudioConfig is not assigned.");
@@ -852,11 +1070,13 @@ namespace AudioManagement
             {
                 HandleId = handleId,
                 Source = source,
+                Clip = source.clip,
                 PooledSource = pooled,
                 Event = null,
                 Bus = bus,
                 IsMusic = false
             });
+            contentService?.RegisterClipInUse(source.clip);
 
             return new AudioHandle(this, handleId);
         }
@@ -888,6 +1108,46 @@ namespace AudioManagement
                 {
                     eventState.Add(evt, new EventRuntimeState());
                 }
+            }
+        }
+
+        private void PreloadAutoBanksForCurrentSettings()
+        {
+            if (config == null || config.Banks == null || contentService == null)
+            {
+                return;
+            }
+
+            preloadEventScratch.Clear();
+            for (var i = 0; i < config.Banks.Length; i++)
+            {
+                var bank = config.Banks[i];
+                if (bank == null || bank.Events == null || bank.Events.Length == 0)
+                {
+                    continue;
+                }
+
+                var canLoadBank = (soundEnabled && bank.LoadWhenSoundEnabled) || (musicEnabled && bank.LoadWhenMusicEnabled);
+                if (!canLoadBank)
+                {
+                    continue;
+                }
+
+                for (var j = 0; j < bank.Events.Length; j++)
+                {
+                    var evt = bank.Events[j];
+                    if (evt == null || !CanLoadEventForCurrentSettings(evt) || preloadEventScratch.Contains(evt))
+                    {
+                        continue;
+                    }
+
+                    preloadEventScratch.Add(evt);
+                }
+            }
+
+            if (preloadEventScratch.Count > 0)
+            {
+                contentService.PreloadEvents(preloadEventScratch);
             }
         }
 
@@ -1003,6 +1263,48 @@ namespace AudioManagement
             return true;
         }
 
+        private bool EnsureEventContentReady(SoundEvent evt, bool preloadIfMissing)
+        {
+            if (contentService == null || evt == null)
+            {
+                return false;
+            }
+
+            if (!CanLoadEventForCurrentSettings(evt))
+            {
+                return false;
+            }
+
+            if (contentService.IsEventReady(evt))
+            {
+                return true;
+            }
+
+            if (preloadIfMissing)
+            {
+                preloadEventScratch.Clear();
+                preloadEventScratch.Add(evt);
+                contentService.PreloadEvents(preloadEventScratch);
+            }
+
+            if (config != null && config.OnDemandPlayPolicy == OnDemandPlayPolicy.QueueAndPlay)
+            {
+                LogInfo($"Event '{evt.Id}' is loading. QueueAndPlay policy is not enabled in this build path; playback skipped for now.");
+            }
+
+            return false;
+        }
+
+        private bool CanLoadEventForCurrentSettings(SoundEvent evt)
+        {
+            if (evt == null)
+            {
+                return false;
+            }
+
+            return evt.MixerBus == AudioBus.Music ? musicEnabled : soundEnabled;
+        }
+
         private bool ResolveIs3D(SoundEvent evt, bool force2D, bool hasPosition, bool hasFollow)
         {
             if (force2D)
@@ -1070,13 +1372,23 @@ namespace AudioManagement
             var runtime = GetOrCreateEventState(evt);
             nextSequenceIndex = runtime.SequenceIndex;
 
-            if (evt.ClipSelection == ClipSelectionMode.WeightedRandom && evt.WeightedClips != null && evt.WeightedClips.Length > 0)
+            if (contentService == null)
+            {
+                return false;
+            }
+
+            if (!contentService.TryCollectLoadedClips(evt, resolvedClips, resolvedWeightedClips))
+            {
+                return false;
+            }
+
+            if (evt.ClipSelection == ClipSelectionMode.WeightedRandom && resolvedWeightedClips.Count > 0)
             {
                 var totalWeight = 0f;
-                for (var i = 0; i < evt.WeightedClips.Length; i++)
+                for (var i = 0; i < resolvedWeightedClips.Count; i++)
                 {
-                    var weight = evt.WeightedClips[i].Weight;
-                    if (evt.WeightedClips[i].Clip != null && weight > 0f)
+                    var weight = resolvedWeightedClips[i].Weight;
+                    if (resolvedWeightedClips[i].Clip != null && weight > 0f)
                     {
                         totalWeight += weight;
                     }
@@ -1086,9 +1398,9 @@ namespace AudioManagement
                 {
                     var pick = NextRandom01() * totalWeight;
                     var cumulative = 0f;
-                    for (var i = 0; i < evt.WeightedClips.Length; i++)
+                    for (var i = 0; i < resolvedWeightedClips.Count; i++)
                     {
-                        var weighted = evt.WeightedClips[i];
+                        var weighted = resolvedWeightedClips[i];
                         if (weighted.Clip == null || weighted.Weight <= 0f)
                         {
                             continue;
@@ -1104,7 +1416,7 @@ namespace AudioManagement
                 }
             }
 
-            if (evt.Clips == null || evt.Clips.Length == 0)
+            if (resolvedClips.Count == 0)
             {
                 return false;
             }
@@ -1112,10 +1424,10 @@ namespace AudioManagement
             if (evt.ClipSelection == ClipSelectionMode.Sequence)
             {
                 var index = runtime.SequenceIndex;
-                for (var attempts = 0; attempts < evt.Clips.Length; attempts++)
+                for (var attempts = 0; attempts < resolvedClips.Count; attempts++)
                 {
-                    var clipCandidate = evt.Clips[index % evt.Clips.Length];
-                    index = (index + 1) % evt.Clips.Length;
+                    var clipCandidate = resolvedClips[index % resolvedClips.Count];
+                    index = (index + 1) % resolvedClips.Count;
                     if (clipCandidate == null)
                     {
                         continue;
@@ -1129,20 +1441,20 @@ namespace AudioManagement
                 return false;
             }
 
-            var selectedIndex = Mathf.FloorToInt(NextRandom01() * evt.Clips.Length);
-            selectedIndex = Mathf.Clamp(selectedIndex, 0, evt.Clips.Length - 1);
+            var selectedIndex = Mathf.FloorToInt(NextRandom01() * resolvedClips.Count);
+            selectedIndex = Mathf.Clamp(selectedIndex, 0, resolvedClips.Count - 1);
 
-            if (evt.Clips[selectedIndex] != null)
+            if (resolvedClips[selectedIndex] != null)
             {
-                clip = evt.Clips[selectedIndex];
+                clip = resolvedClips[selectedIndex];
                 return true;
             }
 
-            for (var i = 0; i < evt.Clips.Length; i++)
+            for (var i = 0; i < resolvedClips.Count; i++)
             {
-                if (evt.Clips[i] != null)
+                if (resolvedClips[i] != null)
                 {
-                    clip = evt.Clips[i];
+                    clip = resolvedClips[i];
                     return true;
                 }
             }
@@ -1301,6 +1613,7 @@ namespace AudioManagement
                 voice.Source.Stop();
             }
 
+            contentService?.UnregisterClipInUse(voice.Clip);
             activeVoices.Remove(handleId);
             RemoveFadeJobs(handleId);
 

@@ -77,9 +77,14 @@ namespace AudioManagement
 
         [Header("Catalog")]
         [SerializeField] private SoundEvent[] soundEvents = Array.Empty<SoundEvent>();
+        [SerializeField] private AudioBank[] banks = Array.Empty<AudioBank>();
 
         [Header("Runtime")]
         [SerializeField] private bool enableDebugLogs;
+        [SerializeField] private bool enableAddressablesLogs;
+        [SerializeField] private OnDemandPlayPolicy onDemandPlayPolicy = OnDemandPlayPolicy.SkipIfNotLoaded;
+        [Min(0f)]
+        [SerializeField] private float unloadDelaySeconds = 15f;
         [SerializeField] private bool pauseSfxAndMusicOnFocusLost = true;
         [SerializeField] private bool pauseSfxAndMusicOnApplicationPause = true;
         [SerializeField] private bool uiAlwaysUnscaled = true;
@@ -94,7 +99,11 @@ namespace AudioManagement
         public PoolSettings Pool2D => pool2D;
         public PoolSettings Pool3D => pool3D;
         public SoundEvent[] SoundEvents => soundEvents;
+        public AudioBank[] Banks => banks;
         public bool EnableDebugLogs => enableDebugLogs;
+        public bool EnableAddressablesLogs => enableAddressablesLogs;
+        public OnDemandPlayPolicy OnDemandPlayPolicy => onDemandPlayPolicy;
+        public float UnloadDelaySeconds => unloadDelaySeconds;
         public bool PauseSfxAndMusicOnFocusLost => pauseSfxAndMusicOnFocusLost;
         public bool PauseSfxAndMusicOnApplicationPause => pauseSfxAndMusicOnApplicationPause;
         public bool UIAlwaysUnscaled => uiAlwaysUnscaled;
@@ -110,6 +119,7 @@ namespace AudioManagement
             instance.mixerGroups = Array.Empty<MixerGroupBinding>();
             instance.snapshots = Array.Empty<SnapshotBinding>();
             instance.soundEvents = Array.Empty<SoundEvent>();
+            instance.banks = Array.Empty<AudioBank>();
 
             instance.exposedVolumeParams = new ExposedVolumeParams
             {
@@ -137,6 +147,9 @@ namespace AudioManagement
             instance.pool3D.Normalize();
 
             instance.enableDebugLogs = false;
+            instance.enableAddressablesLogs = false;
+            instance.onDemandPlayPolicy = OnDemandPlayPolicy.SkipIfNotLoaded;
+            instance.unloadDelaySeconds = 15f;
             instance.pauseSfxAndMusicOnFocusLost = true;
             instance.pauseSfxAndMusicOnApplicationPause = true;
             instance.uiAlwaysUnscaled = true;
@@ -219,6 +232,11 @@ namespace AudioManagement
                 var tmp = minDb;
                 minDb = maxDb;
                 maxDb = tmp;
+            }
+
+            if (unloadDelaySeconds < 0f)
+            {
+                unloadDelaySeconds = 0f;
             }
         }
     }

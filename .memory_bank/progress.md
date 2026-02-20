@@ -16,31 +16,38 @@
   - `README.md`
   - `RELEASE_NOTES.md`
   - `EFFORT_REPORT_0.0.1.md`
-- Headless Unity валидация в временной копии проекта:
-  - production setup выполнен успешно;
-  - validator passed with no issues.
+- Динамическая загрузка через Addressables:
+  - `AudioContentService` (registry state + preload + unload),
+  - `AudioLoadHandle` (progress/status/error),
+  - `AudioBank` и preload по bank/ids/events.
+- `SoundEvent` полностью переведен на `AssetReferenceT<AudioClip>[]` / weighted references.
+- `AudioManager` поддерживает:
+  - `PreloadBank`, `PreloadByIds`, `PreloadByEvents`,
+  - `AcquireScope`, `ReleaseScope`, `UnloadUnused`,
+  - `SetSoundEnabled` с автопрелоадом банков.
+- Демо-сцена реализует preload overlay с процентом и дозагрузку диалоговых звуков при `Sound ON`.
+- Исправлен дефект ref-count при повторяющихся GUID в одном scope.
 
 ## В работе
-- Manual acceptance в основном проекте (Unity Play Mode + Profiler) для подтверждения non-functional требований.
-- Подготовка фичи `0.0.2`: dynamic audio loading через Addressables.
-- Зафиксированы defaults для реализации `0.0.2`: `SkipIfNotLoaded`, `UnloadDelaySeconds = 15`.
-- Подготовлен отдельный demo-трек: диалог + preload overlay + progress + sound toggle reload.
+- Финальный ручной прогон acceptance в Unity Editor (playmode/profiler/addressables).
+- Подготовка PR и ревью для merge в `main`.
 
 ## Известные проблемы
 - Основной проект сейчас открыт в Unity, поэтому batchmode-проверки по этому же `projectPath` блокируются lock-файлом.
-- Финальные метрики flood/perf и субъективные аудио-артефакты (click/pop) требуют ручного прогона в редакторе.
-- Требуется подтверждение продуктовых решений по Addressables/WebGL.
+- Финальные метрики flood/perf и аудио-артефакты (click/pop) требуют ручного прогона в редакторе.
+- `QueueAndPlay` объявлен в enum, но целевой режим релиза — `SkipIfNotLoaded`.
 
 ## Эволюция решений
 - От базовой реализации к production-базису:
   - стабилизирован API (`StopByEventId`, id-overloads, pause merge policy);
   - добавлен автоматический bootstrap ассетов и mixer;
   - выполнен formal compliance review против базового ТЗ.
-- Для следующего этапа утверждена стратегия:
+- Для релиза `0.0.2` реализована стратегия:
   - `SoundEvent` без сериализованных `AudioClip[]`;
   - source контента только `AssetReferenceT<AudioClip>[]`;
-  - memory lifecycle через scope/ref-count + unload policy.
+  - lifecycle через scope/ref-count + delayed unload (`15s`);
+  - on-demand поведение `SkipIfNotLoaded`.
 
 ## Контроль изменений
-last_checked_commit: b3042a97e005f03d57e625a2d2c52f86595ca6fa
-last_checked_date: 2026-02-21 01:06:23 +0700
+last_checked_commit: af7e6e2cb4231201de7dc23194d22c9455a6bb14
+last_checked_date: 2026-02-21 01:13:37 +0700

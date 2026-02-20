@@ -1,49 +1,42 @@
 # Active Context
 
 ## Текущее направление
-Подготовка реализации `0.0.2`: внедрение динамической загрузки аудио через Addressables с контролируемой выгрузкой.
+Реализация `0.0.2`: стабилизация внедренной динамической загрузки аудио через Addressables и подготовка PR.
 
 ## Активные задачи
-- REQUIREMENTS_OWNER: утвердить финальный spec `audio-addressables-dynamic-loading-spec.md`.
-- ARCHITECT: утвердить runtime-модель `AudioContentService + scope/ref-count`.
-- IMPLEMENTER: приступить к TASK-ADDR-001..010 после утверждения политики `QueueAndPlay/Skip`.
-- REQUIREMENTS_OWNER: утвердить demo spec `audio-addressables-dialog-demo-spec.md`.
+- REVIEWER: финальная проверка runtime-path preload/play/unload и ref-count.
+- QA_TESTER: ручной playmode/profiler прогон в Unity Editor (проект сейчас открыт в UI).
+- DOCS_WRITER: синхронизация release-коммуникации перед merge.
 
 ## Последние изменения
-- Сформировано полное ТЗ на Addressables dynamic loading:
-  - `.memory_bank/specs/audio-addressables-dynamic-loading-spec.md`
-- Сформирован детальный роль-ориентированный план:
-  - `.memory_bank/specs/audio-addressables-role-plan.md`
-- Сформировано дополнительное ТЗ на demo-сценарий диалога:
-  - `.memory_bank/specs/audio-addressables-dialog-demo-spec.md`
-- Сформирован роль-ориентированный план demo:
-  - `.memory_bank/specs/audio-addressables-dialog-demo-role-plan.md`
-- Утверждены параметры реализации:
-  - `OnDemandPlayPolicy = SkipIfNotLoaded`
-  - `UnloadDelaySeconds = 15`
-- Обновлена версия продукта (`bundleVersion`) до `0.0.1`.
-- Добавлены релизные документы:
-  - `README.md` (продуктовое описание и quick start)
-  - `RELEASE_NOTES.md` (изменения версии `0.0.1`)
-  - `EFFORT_REPORT_0.0.1.md` (оценка трудозатрат и токенов)
-- `AudioManager`:
-  - auto-load `AudioConfig` из `Resources/Audio/AudioConfig`;
-  - добавлены overloads `PlayMusic(string, fadeIn, crossfade, restartIfSame)` и `PlaySFX(string, Transform)`;
-  - добавлены `StopByEventId` / `StopByEvent`;
-  - переработана pause-state логика (`user/focus/app` merge);
-  - snapshot policy: same-frame priority, cross-frame last request wins.
-- `AudioDemoSceneBootstrap` переведен на новую Input System (`Keyboard.current`), использует вызовы по id.
-- Добавлен `AudioProductionSetup` (editor automation генерации mixer/config/events/clips/build settings).
-- Усилен `AudioValidator` (проверки mixer/snapshots/catalog).
-- Сгенерированы production ассеты:
-  - `AudioMain.mixer`
-  - `Assets/Resources/Audio/AudioConfig.asset`
-  - demo `SoundEvent` assets
-  - demo WAV clips
-- Выполнена headless валидация в временной копии проекта:
-  - production setup completed;
-  - validator passed with no issues.
+- Добавлена Addressables-зависимость в `Packages/manifest.json`.
+- Реализованы новые runtime-компоненты:
+  - `AudioContentService` (load/preload/unload, scope/ref-count, in-use guard),
+  - `AudioLoadHandle` (status/progress/error),
+  - `AudioBank` (группировка событий).
+- Миграция `SoundEvent` на `AssetReferenceT<AudioClip>[]` и weighted references без `AudioClip[]`.
+- Расширен `AudioConfig`:
+  - `banks`,
+  - `enableAddressablesLogs`,
+  - `onDemandPlayPolicy`,
+  - `unloadDelaySeconds`.
+- `AudioManager` интегрирован с dynamic loading API:
+  - `PreloadBank/PreloadByEvents/PreloadByIds`,
+  - `AcquireScope/ReleaseScope/UnloadUnused`,
+  - `SetSoundEnabled` + автопрелоад банков,
+  - debug counters по Addressables.
+- Обновлены editor-инструменты:
+  - `AudioProductionSetup` создает demo bank и addressable entries,
+  - `AudioValidator` проверяет addressable clip refs,
+  - `AudioDebuggerWindow` показывает addressables counters и память.
+- `AudioDemoSceneBootstrap` реализует диалоговый preload flow:
+  - блокирующий overlay с прогрессом,
+  - интро после preload,
+  - дозагрузка при `Sound ON`,
+  - управление через новую Input System.
+- Исправлен ref-count leak при `AcquireScope` для повторяющихся clip GUID.
 
 ## Следующие шаги
-- После утверждения перейти к реализации TASK-ADDR-001.
-- После базовой реализации Addressables перейти к TASK-DEMO-001..006.
+1. Прогнать ручной acceptance в Unity Editor (PlayMode + Profiler + Addressables groups/build).
+2. Подготовить и опубликовать PR с checklist по `audio-addressables-dynamic-loading-spec.md`.
+3. После ревью обновить `RELEASE_NOTES.md` под `0.0.2` и выполнить merge в `main`.

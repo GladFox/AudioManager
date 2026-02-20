@@ -108,24 +108,26 @@ namespace AudioManagementEditor
 
         private static bool HasAnyClip(SoundEvent evt)
         {
-            var clips = evt.Clips;
+            var clips = evt.ClipReferences;
             if (clips != null)
             {
                 for (var i = 0; i < clips.Length; i++)
                 {
-                    if (clips[i] != null)
+                    var reference = clips[i];
+                    if (reference != null && !string.IsNullOrWhiteSpace(reference.AssetGUID))
                     {
                         return true;
                     }
                 }
             }
 
-            var weighted = evt.WeightedClips;
+            var weighted = evt.WeightedClipReferences;
             if (weighted != null)
             {
                 for (var i = 0; i < weighted.Length; i++)
                 {
-                    if (weighted[i].Clip != null && weighted[i].Weight > 0f)
+                    var reference = weighted[i].Reference;
+                    if (reference != null && !string.IsNullOrWhiteSpace(reference.AssetGUID) && weighted[i].Weight > 0f)
                     {
                         return true;
                     }

@@ -33,6 +33,12 @@ namespace AudioManagement
         SkipIfFull = 2
     }
 
+    public enum OnDemandPlayPolicy
+    {
+        QueueAndPlay = 0,
+        SkipIfNotLoaded = 1
+    }
+
     [Serializable]
     public struct PoolSettings
     {
