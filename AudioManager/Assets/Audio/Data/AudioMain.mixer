@@ -117,9 +117,17 @@ AudioMixerController:
     name: AmbienceVolume
   - guid: 448e5361afd324a698568c1f64d16f12
     name: VoiceVolume
-  m_AudioMixerGroupViews: []
+  m_AudioMixerGroupViews:
+  - guids:
+    - 2c7243e368df7491ea564caab7425b8b
+    - c5f698bec39054962a1e4e898058a325
+    - e633ecde562ec436eb9cf9dd27ae9c8b
+    - b80e7d388d62d4979910ed761fb78509
+    - ca05bfa0e74194903aa114a1c0f6aafe
+    - aeb8b54fce7cb4f62abee3ee5caa973f
+    name: View
   m_CurrentViewIndex: 0
-  m_TargetSnapshot: {fileID: 6417315899536713026}
+  m_TargetSnapshot: {fileID: -1431902712805633611}
 --- !u!243 &24300002
 AudioMixerGroupController:
   m_ObjectHideFlags: 0

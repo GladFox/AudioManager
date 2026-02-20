@@ -101,6 +101,9 @@ namespace AudioManagement
         private bool appPauseRequested;
         private bool soundEnabled = true;
         private bool musicEnabled = true;
+        private bool restoreMusicPending;
+        private SoundEvent restoreMusicEvent;
+        private AudioClip restoreMusicClip;
         private uint rngState = 2463534242u;
         private float lastMasterVolumeBeforeMute = 1f;
 
@@ -161,6 +164,7 @@ namespace AudioManagement
             contentService?.Tick(realtime, config != null ? config.UnloadDelaySeconds : 15f);
 
             UpdateFadeJobs(deltaTime);
+            TryRestoreMusicAfterEnable();
             CleanupFinishedMusic();
         }
 
@@ -551,6 +555,7 @@ namespace AudioManagement
 
             if (!enabled)
             {
+                CaptureMusicForRestore();
                 StopAllSFX(0.05f);
                 StopMusic(0.2f);
                 contentService?.ReleaseAllScopes();
@@ -559,6 +564,7 @@ namespace AudioManagement
 
             contentService?.SetLogsEnabled(config != null && config.EnableAddressablesLogs);
             PreloadAutoBanksForCurrentSettings();
+            TryRestoreMusicAfterEnable();
         }
 
         public void SetMasterVolume01(float value)
@@ -1149,6 +1155,66 @@ namespace AudioManagement
             {
                 contentService.PreloadEvents(preloadEventScratch);
             }
+        }
+
+        private void CaptureMusicForRestore()
+        {
+            restoreMusicPending = false;
+            restoreMusicEvent = null;
+            restoreMusicClip = null;
+
+            var active = GetActiveMusicChannel();
+            if (active.Source == null || active.Source.clip == null)
+            {
+                if (musicA.HandleId >= 0 && musicA.Source != null && musicA.Source.clip != null)
+                {
+                    active = musicA;
+                }
+                else if (musicB.HandleId >= 0 && musicB.Source != null && musicB.Source.clip != null)
+                {
+                    active = musicB;
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            restoreMusicEvent = active.CurrentEvent;
+            restoreMusicClip = active.Source.clip;
+            restoreMusicPending = true;
+        }
+
+        private void TryRestoreMusicAfterEnable()
+        {
+            if (!restoreMusicPending || !musicEnabled)
+            {
+                return;
+            }
+
+            AudioHandle handle;
+            if (restoreMusicEvent != null)
+            {
+                handle = PlayMusic(restoreMusicEvent, fadeIn: 0.35f, crossfade: 0.2f, restartIfSame: true);
+            }
+            else if (restoreMusicClip != null)
+            {
+                handle = PlayMusic(restoreMusicClip, fadeIn: 0.35f, crossfade: 0.2f);
+            }
+            else
+            {
+                restoreMusicPending = false;
+                return;
+            }
+
+            if (!handle.IsValid)
+            {
+                return;
+            }
+
+            restoreMusicPending = false;
+            restoreMusicEvent = null;
+            restoreMusicClip = null;
         }
 
         private void InitializePools()

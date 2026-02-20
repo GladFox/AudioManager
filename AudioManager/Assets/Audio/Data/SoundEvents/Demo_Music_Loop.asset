@@ -14,9 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AudioManagement.SoundEvent
   id: demo.music.loop
   clipSelection: 0
-  clips:
-  - {fileID: 8300000, guid: 832c2f1e0a04c4053bb6c8b38a6ac1a6, type: 3}
-  weightedClips: []
+  clipReferences:
+  - m_AssetGUID: 832c2f1e0a04c4053bb6c8b38a6ac1a6
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_SubObjectGUID: 
+    m_EditorAssetChanged: 0
+  weightedClipReferences: []
   mixerBus: 1
   volume: 0.85
   pitchRange: {x: 1, y: 1}
