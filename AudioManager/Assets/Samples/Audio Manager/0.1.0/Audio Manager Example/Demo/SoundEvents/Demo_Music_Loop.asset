@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e1a0040a50b3464d81042d3b0bdbdcf, type: 3}
+  m_Name: Demo_Music_Loop
+  m_EditorClassIdentifier: Assembly-CSharp::AudioManagement.SoundEvent
+  id: demo.music.loop
+  clipSelection: 0
+  clipReferences:
+  - m_AssetGUID: 832c2f1e0a04c4053bb6c8b38a6ac1a6
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_SubObjectGUID: 
+    m_EditorAssetChanged: 0
+  weightedClipReferences: []
+  mixerBus: 1
+  volume: 0.85
+  pitchRange: {x: 1, y: 1}
+  randomStartOffsetMax: 0
+  loop: 1
+  spatialMode: 1
+  minDistance: 1
+  maxDistance: 20
+  rolloffMode: 0
+  priority: 64
+  maxInstances: 1
+  cooldownSeconds: 0
+  duckSfxOnUi: 0
+  bypassReverbZones: 0
+  bypassEffects: 0
