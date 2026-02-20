@@ -1,42 +1,31 @@
 # Active Context
 
 ## Текущее направление
-Реализация `0.0.2`: стабилизация внедренной динамической загрузки аудио через Addressables и подготовка PR.
+Реализация UPM-модели завершена: библиотека вынесена в пакет `com.gladfox.audiomanager`, Unity-проект работает как demo consumer app.
 
 ## Активные задачи
-- REVIEWER: финальная проверка runtime-path preload/play/unload и ref-count.
-- QA_TESTER: ручной playmode/profiler прогон в Unity Editor (проект сейчас открыт в UI).
-- DOCS_WRITER: синхронизация release-коммуникации перед merge.
+- REVIEWER: финальная проверка переноса runtime/editor кода в пакет и отсутствия дублей в app.
+- QA_TESTER: ручной PlayMode прогон в основном проекте (UI/SFX/Music/Addressables/Snapshots).
+- DOCS_WRITER: подготовить release notes для package `0.1.0` и tag plan.
 
 ## Последние изменения
-- Добавлена Addressables-зависимость в `Packages/manifest.json`.
-- Реализованы новые runtime-компоненты:
-  - `AudioContentService` (load/preload/unload, scope/ref-count, in-use guard),
-  - `AudioLoadHandle` (status/progress/error),
-  - `AudioBank` (группировка событий).
-- Миграция `SoundEvent` на `AssetReferenceT<AudioClip>[]` и weighted references без `AudioClip[]`.
-- Расширен `AudioConfig`:
-  - `banks`,
-  - `enableAddressablesLogs`,
-  - `onDemandPlayPolicy`,
-  - `unloadDelaySeconds`.
-- `AudioManager` интегрирован с dynamic loading API:
-  - `PreloadBank/PreloadByEvents/PreloadByIds`,
-  - `AcquireScope/ReleaseScope/UnloadUnused`,
-  - `SetSoundEnabled` + автопрелоад банков,
-  - debug counters по Addressables.
-- Обновлены editor-инструменты:
-  - `AudioProductionSetup` создает demo bank и addressable entries,
-  - `AudioValidator` проверяет addressable clip refs,
-  - `AudioDebuggerWindow` показывает addressables counters и память.
-- `AudioDemoSceneBootstrap` реализует диалоговый preload flow:
-  - блокирующий overlay с прогрессом,
-  - интро после preload,
-  - дозагрузка при `Sound ON`,
-  - управление через новую Input System.
-- Исправлен ref-count leak при `AcquireScope` для повторяющихся clip GUID.
+- Создан UPM пакет в `/upm/com.gladfox.audiomanager`:
+  - `package.json`, `README.md`, `CHANGELOG.md`, `LICENSE.md`;
+  - `Runtime/` + `Editor/` + asmdef.
+- Библиотечные скрипты перенесены из `AudioManager/Assets/Audio/*` в пакет с сохранением `.meta`.
+- Demo app подключен к локальному пакету:
+  - `AudioManager/Packages/manifest.json` -> `com.gladfox.audiomanager: file:../../upm/com.gladfox.audiomanager`.
+- Оставлен app-specific сценарий:
+  - `AudioManager/Assets/Audio/Runtime/Components/AudioDemoSceneBootstrap.cs`.
+- Добавлен package sample:
+  - `Samples~/AudioDemo` (scene + sample bootstrap + README).
+- Обновлены архитектурные документы:
+  - `local/README.md`, `README.md`, `.memory_bank/systemPatterns.md`.
+- Unity batch validation в временной копии прошла успешно:
+  - `AudioProductionSetup.GenerateProductionAssetsBatch`;
+  - `AudioValidator.ValidateSoundEvents` (passed).
 
 ## Следующие шаги
-1. Прогнать ручной acceptance в Unity Editor (PlayMode + Profiler + Addressables groups/build).
-2. Подготовить и опубликовать PR с checklist по `audio-addressables-dynamic-loading-spec.md`.
-3. После ревью обновить `RELEASE_NOTES.md` под `0.0.2` и выполнить merge в `main`.
+1. Выполнить финальный commit/push ветки `codex/upm-modularization`.
+2. Подготовить PR на merge в `main` с checklist UPM migration.
+3. После merge создать tag `upm/v0.1.0`.

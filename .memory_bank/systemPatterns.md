@@ -7,6 +7,7 @@
 - Fail-safe API: отсутствующий event/clip/config не ломает выполнение.
 - Predictable mix: volume API принимает `0..1`, внутренне конвертирует в dB.
 - Dynamic content: аудиоконтент загружается через Addressables по требованию и выгружается по policy.
+- Modular distribution: библиотечный код поставляется как UPM package, приложение-потребитель отделено.
 
 ## Журнал решений
 - Решение: разделить runtime на фасад (`AudioManager`) + инфраструктуру (`AudioSourcePool`, `AudioHandle`) + data (`AudioConfig`, `SoundEvent`).
@@ -27,3 +28,7 @@
   Причина: предсказуемое поведение без скрытых задержек воспроизведения и без очередей в MVP.
 - Решение: добавить `AudioBank` и автопрелоад банков при `SetSoundEnabled(true)`.
   Причина: пакетная загрузка нужных звуков с прогрессом и безопасной дозагрузкой при включении звука.
+- Решение: выделить библиотеку в `/upm/com.gladfox.audiomanager`, а `/AudioManager` использовать как demo consumer app.
+  Причина: переиспользуемость, независимое версионирование, понятный integration contract.
+- Решение: release channel для `0.1.x` — `git tags only` (`upm/vX.Y.Z`), без scoped registry.
+  Причина: минимизация операционной сложности на старте package lifecycle.

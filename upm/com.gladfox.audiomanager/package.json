@@ -1,0 +1,28 @@
+{
+  "name": "com.gladfox.audiomanager",
+  "displayName": "Audio Manager",
+  "version": "0.1.0",
+  "unity": "6000.2",
+  "description": "Centralized Unity audio management with AudioMixer snapshots, pooled AudioSources, and Addressables-driven dynamic loading.",
+  "keywords": [
+    "audio",
+    "audiomixer",
+    "addressables",
+    "pooling",
+    "sound"
+  ],
+  "author": {
+    "name": "GladFox"
+  },
+  "dependencies": {
+    "com.unity.addressables": "2.7.6",
+    "com.unity.ugui": "2.0.0"
+  },
+  "samples": [
+    {
+      "displayName": "Audio Demo",
+      "description": "Demo scene and helper script showing package integration flow.",
+      "path": "Samples~/AudioDemo"
+    }
+  ]
+}
