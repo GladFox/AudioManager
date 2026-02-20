@@ -22,6 +22,9 @@
 
 ## В работе
 - Manual acceptance в основном проекте (Unity Play Mode + Profiler) для подтверждения non-functional требований.
+- Подготовка фичи `0.0.2`: dynamic audio loading через Addressables.
+- Зафиксированы defaults для реализации `0.0.2`: `SkipIfNotLoaded`, `UnloadDelaySeconds = 15`.
+- Подготовлен отдельный demo-трек: диалог + preload overlay + progress + sound toggle reload.
 
 ## Известные проблемы
 - Основной проект сейчас открыт в Unity, поэтому batchmode-проверки по этому же `projectPath` блокируются lock-файлом.
@@ -33,7 +36,11 @@
   - стабилизирован API (`StopByEventId`, id-overloads, pause merge policy);
   - добавлен автоматический bootstrap ассетов и mixer;
   - выполнен formal compliance review против базового ТЗ.
+- Для следующего этапа утверждена стратегия:
+  - `SoundEvent` без сериализованных `AudioClip[]`;
+  - source контента только `AssetReferenceT<AudioClip>[]`;
+  - memory lifecycle через scope/ref-count + unload policy.
 
 ## Контроль изменений
-last_checked_commit: 19f94170a0ff87f01691e6422acc9941d78ebe1a
-last_checked_date: 2026-02-20 09:54:02 +0700
+last_checked_commit: b3042a97e005f03d57e625a2d2c52f86595ca6fa
+last_checked_date: 2026-02-21 01:06:23 +0700

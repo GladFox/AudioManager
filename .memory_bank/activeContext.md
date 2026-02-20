@@ -1,13 +1,26 @@
 # Active Context
 
 ## Текущее направление
-Формирование релиза `0.0.1`: фиксация версии продукта, публикация release notes и продуктовой документации.
+Подготовка реализации `0.0.2`: внедрение динамической загрузки аудио через Addressables с контролируемой выгрузкой.
 
 ## Активные задачи
-- QA_TESTER: ручной play-mode/profiler прогон acceptance matrix в основном Unity-проекте.
-- DOCS_WRITER: обновить релизные документы после manual acceptance.
+- REQUIREMENTS_OWNER: утвердить финальный spec `audio-addressables-dynamic-loading-spec.md`.
+- ARCHITECT: утвердить runtime-модель `AudioContentService + scope/ref-count`.
+- IMPLEMENTER: приступить к TASK-ADDR-001..010 после утверждения политики `QueueAndPlay/Skip`.
+- REQUIREMENTS_OWNER: утвердить demo spec `audio-addressables-dialog-demo-spec.md`.
 
 ## Последние изменения
+- Сформировано полное ТЗ на Addressables dynamic loading:
+  - `.memory_bank/specs/audio-addressables-dynamic-loading-spec.md`
+- Сформирован детальный роль-ориентированный план:
+  - `.memory_bank/specs/audio-addressables-role-plan.md`
+- Сформировано дополнительное ТЗ на demo-сценарий диалога:
+  - `.memory_bank/specs/audio-addressables-dialog-demo-spec.md`
+- Сформирован роль-ориентированный план demo:
+  - `.memory_bank/specs/audio-addressables-dialog-demo-role-plan.md`
+- Утверждены параметры реализации:
+  - `OnDemandPlayPolicy = SkipIfNotLoaded`
+  - `UnloadDelaySeconds = 15`
 - Обновлена версия продукта (`bundleVersion`) до `0.0.1`.
 - Добавлены релизные документы:
   - `README.md` (продуктовое описание и quick start)
@@ -32,5 +45,5 @@
   - validator passed with no issues.
 
 ## Следующие шаги
-- Прогнать manual acceptance в основном проекте (Play Mode + Profiler).
-- При необходимости подготовить patch release `0.0.2` по итогам ручного тестирования.
+- После утверждения перейти к реализации TASK-ADDR-001.
+- После базовой реализации Addressables перейти к TASK-DEMO-001..006.
