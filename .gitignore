@@ -62,3 +62,6 @@
 
 # Unity play mode test temp scenes
 /AudioManager/[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Imported package samples in demo app are local test copies and must not be tracked.
+/AudioManager/Assets/Samples/Audio Manager/

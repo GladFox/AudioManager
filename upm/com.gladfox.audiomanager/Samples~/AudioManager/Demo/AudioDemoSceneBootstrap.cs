@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -14,8 +15,6 @@ namespace AudioManagement
         private const string DialogueScopeId = "demo.dialogue";
         private const string DialoguePrefabResourcePath = "Audio/DemoDialoguePrefab";
 
-        private const float PrefabLoadWeight = 0.35f;
-
         private AudioHandle musicHandle;
         private Transform movingEmitter;
         private float motionTime;
@@ -24,10 +23,11 @@ namespace AudioManagement
         private bool soundEnabled = true;
 
         private bool dialogueScopeActive;
+        private bool dialogueScopeHeld;
         private bool dialogueLoading;
         private Coroutine preloadRoutine;
+        private readonly List<string> dialogueScopeIdScratch = new List<string>(8);
 
-        private GameObject dialoguePrefabAsset;
         private GameObject dialogueInstance;
         private AudioDemoDialoguePrefab dialogueData;
 
@@ -42,8 +42,14 @@ namespace AudioManagement
         private Text snapshotButtonLabel;
         private Text soundButtonLabel;
         private Text dialogueButtonLabel;
+
         private GameObject loadingOverlayRoot;
         private Text loadingOverlayText;
+        private Transform uiCanvasTransform;
+
+        private GameObject dialogueWindowRoot;
+        private Text dialogueWindowInfoLabel;
+        private Text dialogueWindowMusicLabel;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
@@ -128,14 +134,12 @@ namespace AudioManagement
 
             if (WasPressedThisFrame(Key.Digit5, Key.Numpad5))
             {
-                paused = !paused;
-                manager.PauseAll(paused);
+                TogglePause();
             }
 
             if (WasPressedThisFrame(Key.Digit6, Key.Numpad6))
             {
-                menuSnapshot = !menuSnapshot;
-                manager.TransitionToSnapshot(menuSnapshot ? "Menu" : "Gameplay", 0.25f);
+                ToggleSnapshot();
             }
 
             if (WasPressedThisFrame(Key.Digit7, Key.Numpad7))
@@ -159,10 +163,11 @@ namespace AudioManagement
                 preloadRoutine = null;
             }
 
-            if (dialogueScopeActive)
+            var manager = AudioManager.Instance;
+            if (manager != null && dialogueScopeHeld)
             {
-                AudioManager.Instance?.ReleaseScope(DialogueScopeId);
-                dialogueScopeActive = false;
+                manager.ReleaseScope(DialogueScopeId);
+                dialogueScopeHeld = false;
             }
 
             if (dialogueInstance != null)
@@ -171,7 +176,7 @@ namespace AudioManagement
                 dialogueInstance = null;
             }
 
-            dialoguePrefabAsset = null;
+            DestroyDialogueWindow();
         }
 
         private void ToggleSound()
@@ -287,34 +292,26 @@ namespace AudioManagement
             dialogueLoading = true;
             SetLoadingOverlay(true, "Загрузка prefab диалога...", 0f);
 
-            var marker = manager.CaptureDiscoveryMarker();
-
-            if (dialoguePrefabAsset == null)
+            var prefab = Resources.Load<GameObject>(DialoguePrefabResourcePath);
+            if (prefab == null)
             {
-                var prefabLoad = Resources.LoadAsync<GameObject>(DialoguePrefabResourcePath);
-                while (!prefabLoad.isDone)
-                {
-                    SetLoadingOverlay(true, "Загрузка prefab диалога...", Mathf.Clamp01(prefabLoad.progress) * PrefabLoadWeight);
-                    yield return null;
-                }
-
-                dialoguePrefabAsset = prefabLoad.asset as GameObject;
-                if (dialoguePrefabAsset == null)
-                {
-                    Debug.LogError($"[AudioDemo] Dialogue prefab not found by path '{DialoguePrefabResourcePath}'.");
-                    SetLoadingOverlay(false, string.Empty, 0f);
-                    dialogueLoading = false;
-                    preloadRoutine = null;
-                    yield break;
-                }
+                Debug.LogError($"[AudioDemo] Dialogue prefab not found by path '{DialoguePrefabResourcePath}'.");
+                dialogueLoading = false;
+                SetLoadingOverlay(false, string.Empty, 0f);
+                preloadRoutine = null;
+                yield break;
             }
+
+            SetLoadingOverlay(true, "Создание диалога...", 0.25f);
+            yield return null;
 
             if (dialogueInstance != null)
             {
                 Destroy(dialogueInstance);
+                dialogueInstance = null;
             }
 
-            dialogueInstance = Instantiate(dialoguePrefabAsset);
+            dialogueInstance = Instantiate(prefab);
             dialogueInstance.name = "Demo Dialogue (Runtime)";
             dialogueData = dialogueInstance.GetComponent<AudioDemoDialoguePrefab>();
             if (dialogueData == null)
@@ -322,27 +319,31 @@ namespace AudioManagement
                 Debug.LogError("[AudioDemo] Loaded dialogue prefab does not contain AudioDemoDialoguePrefab component.");
                 Destroy(dialogueInstance);
                 dialogueInstance = null;
-                SetLoadingOverlay(false, string.Empty, 0f);
                 dialogueLoading = false;
+                SetLoadingOverlay(false, string.Empty, 0f);
                 preloadRoutine = null;
                 yield break;
             }
 
-            var handle = manager.PreloadDiscoveredSince(marker, acquireScope: true, scopeId: DialogueScopeId);
+            EnsureDialogueWindow();
+            SetLoadingOverlay(true, "Подгрузка звуков диалога...", 0.35f);
+
+            var handle = AcquireDialogueScope(manager);
             while (handle != null && !handle.IsDone)
             {
-                var weighted = PrefabLoadWeight + Mathf.Clamp01(handle.Progress) * (1f - PrefabLoadWeight);
-                SetLoadingOverlay(true, "Загрузка звуков диалога...", weighted);
+                var weighted = 0.35f + Mathf.Clamp01(handle.Progress) * 0.65f;
+                SetLoadingOverlay(true, "Подгрузка звуков диалога...", weighted);
                 yield return null;
             }
 
-            SetLoadingOverlay(true, "Звуки диалога готовы", 1f);
+            SetLoadingOverlay(true, "Диалог готов", 1f);
             yield return null;
             SetLoadingOverlay(false, string.Empty, 0f);
 
             dialogueScopeActive = true;
             dialogueLoading = false;
             preloadRoutine = null;
+            RefreshDialogueWindowState();
 
             if (playIntroOnComplete)
             {
@@ -365,9 +366,11 @@ namespace AudioManagement
             if (manager != null)
             {
                 StopDialogueEvents(manager);
-                if (dialogueScopeActive)
+
+                if (dialogueScopeHeld)
                 {
                     manager.ReleaseScope(DialogueScopeId);
+                    dialogueScopeHeld = false;
                 }
             }
 
@@ -380,8 +383,7 @@ namespace AudioManagement
             }
 
             dialogueData = null;
-
-            // Keep loaded prefab cached. UnloadAsset is not valid for GameObject prefabs.
+            DestroyDialogueWindow();
         }
 
         private void StopDialogueEvents(AudioManager manager)
@@ -396,6 +398,34 @@ namespace AudioManagement
             StopEvent(manager, dialogueData?.Line1);
             StopEvent(manager, dialogueData?.Line2);
             StopEvent(manager, dialogueData?.Line3);
+        }
+
+        private AudioLoadHandle AcquireDialogueScope(AudioManager manager)
+        {
+            dialogueScopeIdScratch.Clear();
+            AddEventId(dialogueScopeIdScratch, dialogueData?.Intro);
+            AddEventId(dialogueScopeIdScratch, dialogueData?.Line1);
+            AddEventId(dialogueScopeIdScratch, dialogueData?.Line2);
+            AddEventId(dialogueScopeIdScratch, dialogueData?.Line3);
+            AddEventId(dialogueScopeIdScratch, dialogueData?.Music);
+
+            dialogueScopeHeld = dialogueScopeIdScratch.Count > 0;
+            if (!dialogueScopeHeld)
+            {
+                return AudioLoadHandle.Completed();
+            }
+
+            return manager.AcquireScope(DialogueScopeId, dialogueScopeIdScratch);
+        }
+
+        private static void AddEventId(List<string> list, SoundEvent evt)
+        {
+            if (list == null || evt == null || string.IsNullOrWhiteSpace(evt.Id) || list.Contains(evt.Id))
+            {
+                return;
+            }
+
+            list.Add(evt.Id);
         }
 
         private static void StopEvent(AudioManager manager, SoundEvent evt)
@@ -429,9 +459,12 @@ namespace AudioManagement
         private void BuildUi()
         {
             var canvasGo = new GameObject("Audio Demo UI", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            canvasGo.transform.SetParent(transform, false);
+
             var canvas = canvasGo.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 100;
+            uiCanvasTransform = canvas.transform;
 
             var scaler = canvasGo.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -439,57 +472,130 @@ namespace AudioManagement
             scaler.matchWidthOrHeight = 0.5f;
 
             var panel = CreateRectTransform(
-                "Panel",
+                "Main Panel",
                 canvas.transform,
                 new Vector2(0f, 1f),
                 new Vector2(0f, 1f),
                 new Vector2(0f, 1f),
-                new Vector2(16f, -16f),
-                new Vector2(430f, 430f));
+                new Vector2(20f, -20f),
+                new Vector2(760f, 760f));
 
             var panelImage = panel.gameObject.AddComponent<Image>();
-            panelImage.color = new Color(0.08f, 0.08f, 0.1f, 0.78f);
+            panelImage.color = new Color(0.08f, 0.08f, 0.1f, 0.88f);
 
             CreateText(
                 "Title",
                 panel,
-                "Addressables Demo (uGUI)\n1/2/3 lines, 4 music, 5 pause, 6 snapshot, 7 sound, 8 dialog",
-                new Vector2(12f, -10f),
-                new Vector2(406f, 56f),
-                14,
+                "Addressables Demo (uGUI)\nБольшой UI + динамический popup-диалог",
+                new Vector2(20f, -20f),
+                new Vector2(720f, 100f),
+                28,
                 TextAnchor.UpperLeft,
-                new Color(0.9f, 0.95f, 1f, 1f));
+                new Color(0.92f, 0.97f, 1f, 1f));
+
+            CreateText(
+                "Hint",
+                panel,
+                "Горячие клавиши: 1/2/3 линии, 4 музыка, 5 пауза, 6 snapshot, 7 звук, 8 диалог",
+                new Vector2(20f, -128f),
+                new Vector2(720f, 56f),
+                20,
+                TextAnchor.UpperLeft,
+                new Color(0.82f, 0.89f, 0.95f, 1f));
 
             stateLabel = CreateText(
                 "State",
                 panel,
                 string.Empty,
-                new Vector2(12f, -68f),
-                new Vector2(406f, 56f),
-                13,
+                new Vector2(20f, -188f),
+                new Vector2(720f, 92f),
+                20,
                 TextAnchor.UpperLeft,
-                new Color(0.85f, 0.9f, 0.95f, 1f));
+                new Color(0.86f, 0.92f, 0.96f, 1f));
 
-            var y = -132f;
-            CreateButton(panel, "Play Line 1", y, () => PlayDialogueLine(1), out _);
-            y -= 36f;
-            CreateButton(panel, "Play Line 2 (3D)", y, () => PlayDialogueLine(2), out _);
-            y -= 36f;
-            CreateButton(panel, "Play Line 3", y, () => PlayDialogueLine(3), out _);
-            y -= 36f;
-            CreateButton(panel, "Replay Intro", y, PlayIntro, out _);
-            y -= 36f;
-            CreateButton(panel, "Play Music (4)", y, ToggleMusic, out musicButtonLabel);
-            y -= 36f;
-            CreateButton(panel, "Pause (5)", y, TogglePause, out pauseButtonLabel);
-            y -= 36f;
-            CreateButton(panel, "Menu Snapshot (6)", y, ToggleSnapshot, out snapshotButtonLabel);
-            y -= 36f;
-            CreateButton(panel, "Sound OFF (7)", y, ToggleSound, out soundButtonLabel);
-            y -= 36f;
-            CreateButton(panel, "Close Dialogue (8)", y, ToggleDialogueScope, out dialogueButtonLabel);
+            var y = -300f;
+            CreateButton(panel, "Open / Close Dialogue (8)", y, new Vector2(720f, 58f), 22, ToggleDialogueScope, out dialogueButtonLabel);
+            y -= 68f;
+            CreateButton(panel, "Sound OFF (7)", y, new Vector2(720f, 58f), 22, ToggleSound, out soundButtonLabel);
+            y -= 68f;
+            CreateButton(panel, "Play Music (4)", y, new Vector2(720f, 58f), 22, ToggleMusic, out musicButtonLabel);
+            y -= 68f;
+            CreateButton(panel, "Pause (5)", y, new Vector2(720f, 58f), 22, TogglePause, out pauseButtonLabel);
+            y -= 68f;
+            CreateButton(panel, "Menu Snapshot (6)", y, new Vector2(720f, 58f), 22, ToggleSnapshot, out snapshotButtonLabel);
 
             BuildLoadingOverlay(canvas.transform);
+        }
+
+        private void EnsureDialogueWindow()
+        {
+            if (dialogueWindowRoot != null)
+            {
+                dialogueWindowRoot.SetActive(true);
+                return;
+            }
+
+            dialogueWindowRoot = new GameObject("Dialogue Popup", typeof(RectTransform), typeof(Image));
+            var parent = uiCanvasTransform != null ? uiCanvasTransform : transform;
+            dialogueWindowRoot.transform.SetParent(parent, false);
+
+            var rootRect = dialogueWindowRoot.GetComponent<RectTransform>();
+            rootRect.anchorMin = new Vector2(0.5f, 0.5f);
+            rootRect.anchorMax = new Vector2(0.5f, 0.5f);
+            rootRect.pivot = new Vector2(0.5f, 0.5f);
+            rootRect.sizeDelta = new Vector2(900f, 620f);
+            rootRect.anchoredPosition = new Vector2(280f, -30f);
+
+            var rootImage = dialogueWindowRoot.GetComponent<Image>();
+            rootImage.color = new Color(0.06f, 0.11f, 0.16f, 0.94f);
+
+            CreateText(
+                "Popup Title",
+                rootRect,
+                "Dynamic Dialogue Loaded",
+                new Vector2(20f, -20f),
+                new Vector2(860f, 56f),
+                30,
+                TextAnchor.UpperLeft,
+                new Color(0.91f, 0.98f, 1f, 1f));
+
+            dialogueWindowInfoLabel = CreateText(
+                "Popup Info",
+                rootRect,
+                string.Empty,
+                new Vector2(20f, -84f),
+                new Vector2(860f, 116f),
+                20,
+                TextAnchor.UpperLeft,
+                new Color(0.82f, 0.92f, 0.98f, 1f));
+
+            var y = -220f;
+            CreateButton(rootRect, "Play Intro", y, new Vector2(860f, 56f), 22, PlayIntro, out _);
+            y -= 66f;
+            CreateButton(rootRect, "Play Line 1", y, new Vector2(860f, 56f), 22, () => PlayDialogueLine(1), out _);
+            y -= 66f;
+            CreateButton(rootRect, "Play Line 2 (3D Follow)", y, new Vector2(860f, 56f), 22, () => PlayDialogueLine(2), out _);
+            y -= 66f;
+            CreateButton(rootRect, "Play Line 3", y, new Vector2(860f, 56f), 22, () => PlayDialogueLine(3), out _);
+            y -= 66f;
+            CreateButton(rootRect, "Play Music", y, new Vector2(860f, 56f), 22, ToggleMusic, out dialogueWindowMusicLabel);
+            y -= 66f;
+            CreateButton(rootRect, "Unload Dialogue (Destroy)", y, new Vector2(860f, 56f), 22, CloseDialogue, out _);
+
+            RefreshDialogueWindowState();
+        }
+
+        private void DestroyDialogueWindow()
+        {
+            if (dialogueWindowRoot == null)
+            {
+                return;
+            }
+
+            Destroy(dialogueWindowRoot);
+            dialogueWindowRoot = null;
+            dialogueWindowInfoLabel = null;
+            dialogueWindowMusicLabel = null;
         }
 
         private void TogglePause()
@@ -516,15 +622,15 @@ namespace AudioManagement
             rootRect.offsetMax = Vector2.zero;
 
             var rootImage = loadingOverlayRoot.GetComponent<Image>();
-            rootImage.color = new Color(0f, 0f, 0f, 0.78f);
+            rootImage.color = new Color(0f, 0f, 0f, 0.8f);
 
             var text = CreateText(
                 "Loading Text",
                 rootRect,
                 string.Empty,
                 new Vector2(0f, 0f),
-                new Vector2(700f, 160f),
-                28,
+                new Vector2(960f, 220f),
+                44,
                 TextAnchor.MiddleCenter,
                 Color.white);
 
@@ -538,7 +644,14 @@ namespace AudioManagement
             loadingOverlayRoot.SetActive(false);
         }
 
-        private Button CreateButton(Transform parent, string text, float y, UnityEngine.Events.UnityAction onClick, out Text label)
+        private Button CreateButton(
+            Transform parent,
+            string text,
+            float y,
+            Vector2 size,
+            int fontSize,
+            UnityEngine.Events.UnityAction onClick,
+            out Text label)
         {
             var buttonRect = CreateRectTransform(
                 text + " Button",
@@ -546,17 +659,17 @@ namespace AudioManagement
                 new Vector2(0f, 1f),
                 new Vector2(0f, 1f),
                 new Vector2(0f, 1f),
-                new Vector2(12f, y),
-                new Vector2(406f, 30f));
+                new Vector2(20f, y),
+                size);
 
             var image = buttonRect.gameObject.AddComponent<Image>();
-            image.color = new Color(0.17f, 0.2f, 0.25f, 0.95f);
+            image.color = new Color(0.16f, 0.24f, 0.32f, 0.98f);
 
             var button = buttonRect.gameObject.AddComponent<Button>();
             var colors = button.colors;
-            colors.normalColor = new Color(1f, 1f, 1f, 1f);
-            colors.highlightedColor = new Color(0.92f, 0.95f, 1f, 1f);
-            colors.pressedColor = new Color(0.8f, 0.86f, 0.95f, 1f);
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color(0.92f, 0.98f, 1f, 1f);
+            colors.pressedColor = new Color(0.76f, 0.88f, 0.96f, 1f);
             button.colors = colors;
             button.onClick.AddListener(onClick);
 
@@ -564,9 +677,9 @@ namespace AudioManagement
                 "Label",
                 buttonRect,
                 text,
-                new Vector2(0f, 0f),
-                new Vector2(406f, 30f),
-                14,
+                Vector2.zero,
+                size,
+                fontSize,
                 TextAnchor.MiddleCenter,
                 Color.white);
 
@@ -636,8 +749,10 @@ namespace AudioManagement
             if (stateLabel != null)
             {
                 var dialogueStatus = dialogueScopeActive ? "active" : "inactive";
-                var prefabStatus = dialogueData != null ? "loaded" : "not loaded";
-                stateLabel.text = $"Dialogue prefab: {prefabStatus}\nScope: {dialogueStatus}, Sound: {(soundEnabled ? "on" : "off")}";
+                var prefabStatus = dialogueData != null ? "instantiated" : "not created";
+                stateLabel.text =
+                    $"Dialogue object: {prefabStatus}\n" +
+                    $"Scope: {dialogueStatus}, Loading: {(dialogueLoading ? "yes" : "no")}, Sound: {(soundEnabled ? "on" : "off")}";
             }
 
             if (musicButtonLabel != null)
@@ -662,8 +777,12 @@ namespace AudioManagement
 
             if (dialogueButtonLabel != null)
             {
-                dialogueButtonLabel.text = (dialogueScopeActive || dialogueLoading) ? "Close Dialogue (8)" : "Open Dialogue (8)";
+                dialogueButtonLabel.text = (dialogueScopeActive || dialogueLoading)
+                    ? "Close Dialogue (8)"
+                    : "Open Dialogue (8)";
             }
+
+            RefreshDialogueWindowState();
 
             if (loadingOverlayRoot != null && loadingOverlayRoot.activeSelf != isLoadingOverlayVisible)
             {
@@ -674,6 +793,32 @@ namespace AudioManagement
             {
                 var percent = Mathf.RoundToInt(loadingProgress01 * 100f);
                 loadingOverlayText.text = $"{loadingMessage}\n{percent}%";
+            }
+        }
+
+        private void RefreshDialogueWindowState()
+        {
+            if (dialogueWindowRoot != null)
+            {
+                dialogueWindowRoot.SetActive(dialogueScopeActive && dialogueData != null);
+            }
+
+            if (dialogueWindowInfoLabel != null)
+            {
+                var introId = dialogueData?.Intro != null ? dialogueData.Intro.Id : "-";
+                var line1Id = dialogueData?.Line1 != null ? dialogueData.Line1.Id : "-";
+                var line2Id = dialogueData?.Line2 != null ? dialogueData.Line2.Id : "-";
+                var line3Id = dialogueData?.Line3 != null ? dialogueData.Line3.Id : "-";
+                var musicId = dialogueData?.Music != null ? dialogueData.Music.Id : "-";
+
+                dialogueWindowInfoLabel.text =
+                    $"Runtime prefab instantiated. SoundEvent IDs:\n" +
+                    $"intro={introId}, line1={line1Id}, line2={line2Id}, line3={line3Id}, music={musicId}";
+            }
+
+            if (dialogueWindowMusicLabel != null)
+            {
+                dialogueWindowMusicLabel.text = musicHandle.IsValid ? "Stop Music" : "Play Music";
             }
         }
 
