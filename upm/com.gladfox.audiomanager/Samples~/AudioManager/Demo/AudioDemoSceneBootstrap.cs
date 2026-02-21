@@ -171,11 +171,7 @@ namespace AudioManagement
                 dialogueInstance = null;
             }
 
-            if (dialoguePrefabAsset != null)
-            {
-                Resources.UnloadAsset(dialoguePrefabAsset);
-                dialoguePrefabAsset = null;
-            }
+            dialoguePrefabAsset = null;
         }
 
         private void ToggleSound()
@@ -385,11 +381,7 @@ namespace AudioManagement
 
             dialogueData = null;
 
-            if (dialoguePrefabAsset != null)
-            {
-                Resources.UnloadAsset(dialoguePrefabAsset);
-                dialoguePrefabAsset = null;
-            }
+            // Keep loaded prefab cached. UnloadAsset is not valid for GameObject prefabs.
         }
 
         private void StopDialogueEvents(AudioManager manager)
