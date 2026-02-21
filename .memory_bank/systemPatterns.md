@@ -36,3 +36,7 @@
   Причина: единый источник example-ассетов для UPM и предсказуемый sample import flow через Package Manager.
 - Решение: автодискавери `SoundEvent` в рантайме через lifecycle реестр (`OnEnable/OnDisable`) и preload API `PreloadDiscovered*`.
   Причина: убрать ручные preload-списки для динамически собираемых диалогов и сохранить централизованный контроль загрузки/выгрузки.
+- Решение: для demo popup-диалога использовать explicit preload по `AcquireScope(scopeId, ids)` (ids собираются из prefab `SoundEvent` ссылок), а не marker-based preload.
+  Причина: deterministic first-click playback без гонок discovery-момента.
+- Решение: app-копии package sample в `AudioManager/Assets/Samples/Audio Manager` исключены из git.
+  Причина: убрать дубли source-of-truth и снизить шум/конфликты между UPM sample и локальным импортом.

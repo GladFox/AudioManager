@@ -11,11 +11,11 @@ This sample contains the full `Assets/AudioManager` demo folder:
 3. Enter Play Mode and verify demo controls in the scene UI.
 4. Press `8` (or click `Open/Close Dialogue`) to test full lifecycle:
    - dynamic prefab load from `Resources/Audio/DemoDialoguePrefab`
-   - `PreloadDiscoveredSince(..., acquireScope: true, scopeId: "demo.dialogue")`
-   - `ReleaseScope("demo.dialogue")` and delayed unload after close
+   - `AcquireScope("demo.dialogue", ids)` before first playback
+   - `ReleaseScope("demo.dialogue")` + `UnloadUnused()` on close
 
 ## Notes
 - The sample expects package runtime/editor code from `com.gladfox.audiomanager`.
 - Addressables settings live in the consumer app project.
-- Demo UI is implemented with runtime `uGUI` (no `OnGUI`/IMGUI).
-- Bootstrap uses discovery preload for dialog audio without manual id lists.
+- Demo UI is implemented with runtime `uGUI` (no `OnGUI`/IMGUI), including large controls and dialogue popup.
+- Bootstrap uses deterministic preload for dialog prefab events to guarantee first-click playback.

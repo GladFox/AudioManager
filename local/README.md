@@ -43,6 +43,9 @@
 1. Consumer app (`AudioManager`) как контейнер проекта/пакетов.
 2. Package sample (`Samples~/AudioManager`) как полный demo-контент.
 
+Для git-source-of-truth demo ассетов используется только package sample.
+Локальные импортированные копии sample в `AudioManager/Assets/Samples/Audio Manager` считаются тестовыми и не трекаются в git.
+
 ## Setup & Validation
 - Setup ассетов: `Tools/Audio/Setup/Generate Production Assets`.
 - Validation: `Tools/Audio/Validate Sound Events`.

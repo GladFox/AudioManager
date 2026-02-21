@@ -14,11 +14,14 @@
 - App-проект больше не хранит дубли demo-контента в `Assets/AudioManager`.
 - Addressables dynamic loading архитектура продолжает работать после упаковки.
 - Discovery preload для динамических `SoundEvent` реализован в runtime API (`PreloadDiscovered*`).
-- Demo bootstrap использует discovery preload без ручного списка ids.
+- Demo bootstrap использует крупный `uGUI` и popup-окно диалога поверх основного UI.
+- Demo dialogue runtime flow переведен на `Resources.Load + Instantiate + Destroy`.
+- Для prefab-контракта диалога реализован deterministic preload по `AcquireScope(scopeId, ids)`.
+- На закрытии диалога выполняется immediate cleanup: `ReleaseScope + UnloadUnused`.
+- Локальные app-копии sample исключены из git (`AudioManager/Assets/Samples/Audio Manager`).
 
 ## В работе
-- Финальный manual QA под `0.1.2`.
-- Подготовка tag `upm/v0.1.2`.
+- Финальный post-release smoke под `0.1.3`.
 
 ## Известные проблемы
 - Локальный `dotnet build` по `Assembly-CSharp.csproj` в рабочем проекте может использовать устаревшие csproj до Unity refresh.
@@ -33,7 +36,9 @@
   - demo-контент стандартизирован как пакетный sample, а не app-asset дубликат.
   - релиз `0.1.1` зафиксировал UPM-first delivery и единый installation URL в документации.
   - в `0.1.2` реализован автоматический discovery preload для динамических диалогов вместо ручных preload-list.
+  - в `0.1.3` demo-поток переведен на явный prefab lifecycle и deterministic scope preload для first-click ready playback.
+  - в `0.1.3` app sample копии исключены из git; source-of-truth demo ассетов остается в UPM `Samples~`.
 
 ## Контроль изменений
-last_checked_commit: a090c2a5e6bb6e839222cd2327f43015a35fc31c
-last_checked_date: 2026-02-22 03:51:18 +0700
+last_checked_commit: 1c6abf5b9441a8cfcd1f3e271a52655dffec7277
+last_checked_date: 2026-02-21

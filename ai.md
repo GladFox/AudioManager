@@ -22,7 +22,7 @@
 `"com.gladfox.audiomanager": "file:../../upm/com.gladfox.audiomanager"`
 
 2. Git dependency (внешний проект):
-`https://github.com/GladFox/AudioManager.git?path=/upm/com.gladfox.audiomanager#upm/v0.1.2`
+`https://github.com/GladFox/AudioManager.git?path=/upm/com.gladfox.audiomanager#upm/v0.1.3`
 
 ## Минимальный integration checklist
 1. Установить пакет.
@@ -44,6 +44,11 @@
 - Для динамических диалогов без ручных списков использовать discovery API:
   - `marker = CaptureDiscoveryMarker()` до построения/поднятия диалога;
   - `PreloadDiscoveredSince(marker, acquireScope: true, scopeId: "...")` после завершения загрузки диалога.
+- Для динамических диалогов с явным prefab-контрактом (известные `SoundEvent` в компоненте) предпочитать:
+  - собрать список `SoundEvent.Id` из prefab;
+  - `AcquireScope(scopeId, ids)` перед первым воспроизведением;
+  - `ReleaseScope(scopeId)` при закрытии;
+  - `UnloadUnused()` если нужен immediate unload.
 - Для полного preload discoverable событий использовать `PreloadDiscovered(...)`.
 - Учитывать policy для `0.1.x`: `SkipIfNotLoaded`.
 - Для жизненного цикла контента использовать scope/ref-count API: `AcquireScope` / `ReleaseScope`.

@@ -1,25 +1,21 @@
 # Active Context
 
 ## Текущее направление
-Релиз `0.1.2` реализован: добавлен discovery preload для динамических `SoundEvent` без ручных preload-list.
+Подготовка и выпуск релиза `0.1.3`: стабилизация demo UX, deterministic preload первого клика, cleanup git-шума app sample копий.
 
 ## Активные задачи
-- QA_TESTER: PlayMode smoke и регрессия по dynamic dialog flow.
-- DOCS_WRITER: финальная синхронизация README/AI guide/release docs.
-- STEWARD: подготовка tag `upm/v0.1.2`.
+- QA_TESTER: smoke по demo flow (open/close dialogue, first-click playback, immediate unload).
+- DOCS_WRITER: синхронизация релизной документации под `0.1.3`.
+- STEWARD: release tag `upm/v0.1.3`.
 
 ## Последние изменения
-- Добавлен runtime `SoundEventDiscoveryRegistry`.
-- `SoundEvent` теперь авто-регистрируется в discovery registry (`OnEnable/OnDisable`).
-- В `AudioManager` добавлены API:
-  - `CaptureDiscoveryMarker()`
-  - `PreloadDiscovered(...)`
-  - `PreloadDiscoveredSince(marker, ...)`
-- Demo bootstrap переведен с ручного `PreloadByIds` на `PreloadDiscovered(..., scopeId: "demo.dialogue")`.
-- Добавлен editor hook для очистки discovery-реестра при входе в Play Mode.
-- Обновлены release/docs (`CHANGELOG`, `RELEASE_NOTES`, `README`, `ai.md`).
+- Demo `uGUI` увеличен и дополнен popup-окном диалога с дополнительными кнопками воспроизведения.
+- Demo dialogue lifecycle переведен на `Resources.Load + Instantiate + Destroy`.
+- Preload диалога переведен на `AcquireScope(scopeId, ids)` из `SoundEvent.Id` prefab-контракта.
+- При закрытии диалога выполняется `ReleaseScope + UnloadUnused` для immediate cleanup.
+- В git добавлен ignore для app sample копий: `AudioManager/Assets/Samples/Audio Manager`.
 
 ## Следующие шаги
-1. Прогнать manual QA matrix для dynamic dialog и unload-cycle.
-2. Создать git tag `upm/v0.1.2`.
-3. Подготовить scope следующего релиза (`0.1.3`).
+1. Проверить импорт sample в чистом consumer проекте через Package Manager.
+2. Зафиксировать post-release smoke checklist в docs (first-click + unload-cycle).
+3. Подготовить scope следующего релиза (`0.1.4`).

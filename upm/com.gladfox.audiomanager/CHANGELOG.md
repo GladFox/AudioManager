@@ -2,6 +2,20 @@
 
 All notable changes to this package will be documented in this file.
 
+## [0.1.3] - 2026-02-21
+### Added
+- Demo UI upgraded to large readable `uGUI` layout.
+- New runtime popup window in demo that appears after dialogue load and exposes extra sound playback buttons.
+
+### Changed
+- Demo dialogue load flow switched to explicit `Resources.Load + Instantiate + Destroy` lifecycle.
+- Demo preload flow switched from marker-based discovery preload to explicit scope acquire by dialogue event ids (`AcquireScope(...)`) for deterministic first-click playback.
+- Root `.gitignore` updated to ignore local app sample import copies under `AudioManager/Assets/Samples/Audio Manager`.
+
+### Fixed
+- Addressables dialogue sounds are now ready before first user playback click in demo flow.
+- Dialogue close now forces immediate cleanup of unused clips via `UnloadUnused()` after `ReleaseScope`.
+
 ## [0.1.2] - 2026-02-22
 ### Added
 - Runtime `SoundEventDiscoveryRegistry` with auto-register on `SoundEvent.OnEnable/OnDisable`.

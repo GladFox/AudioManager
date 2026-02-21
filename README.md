@@ -1,6 +1,6 @@
 # AudioManager (UPM + Demo App)
 
-Стартовая UPM-версия: `0.1.2`  
+Стартовая UPM-версия: `0.1.3`  
 Release channel `0.1.x`: `git tags only`
 
 ## Что это
@@ -41,7 +41,7 @@ Release channel `0.1.x`: `git tags only`
 ## UPM
 - Package path: `/upm/com.gladfox.audiomanager`
 - Git dependency URL:
-  - `https://github.com/GladFox/AudioManager.git?path=/upm/com.gladfox.audiomanager#upm/v0.1.2`
+  - `https://github.com/GladFox/AudioManager.git?path=/upm/com.gladfox.audiomanager#upm/v0.1.3`
 
 ## Быстрый старт (demo app)
 1. Открой проект Unity (`/AudioManager`).
@@ -52,12 +52,13 @@ Release channel `0.1.x`: `git tags only`
 5. Запусти Play Mode и проверь:
    - preload overlay с прогрессом загрузки Addressables;
    - dynamic dialog prefab (`Resources/Audio/DemoDialoguePrefab`) со ссылками на `SoundEvent`;
+   - popup-окно диалога поверх основного UI с дополнительными кнопками воспроизведения;
    - `1/2/3`: line playback (UI/3D follow/UI);
    - `4`: music toggle;
    - `5`: pause/resume;
    - `6`: menu/gameplay snapshot;
    - `7`: sound off/on (+ reload missing dialogue sounds);
-   - `8`: dialogue open/close with `PreloadDiscoveredSince` + `ReleaseScope`.
+   - `8`: dialogue open/close with `AcquireScope` + `ReleaseScope` + immediate unload.
 
 ## Базовый пример использования
 ```csharp
