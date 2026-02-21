@@ -371,6 +371,7 @@ namespace AudioManagement
                 {
                     manager.ReleaseScope(DialogueScopeId);
                     dialogueScopeHeld = false;
+                    manager.UnloadUnused();
                 }
             }
 
