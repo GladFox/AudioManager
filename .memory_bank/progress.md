@@ -15,8 +15,8 @@
 - Addressables dynamic loading архитектура продолжает работать после упаковки.
 
 ## В работе
-- Выпуск тега `upm/v0.1.1`.
-- Проверка установки пакета в чистом проекте по git dependency URL.
+- Подготовка релиза `0.1.2` (dynamic `SoundEvent` discovery preload).
+- Спецификация и role-plan на реализацию автосбора событий без ручных списков.
 
 ## Известные проблемы
 - Локальный `dotnet build` по `Assembly-CSharp.csproj` в рабочем проекте может использовать устаревшие csproj до Unity refresh.
@@ -29,7 +29,8 @@
   - release channel зафиксирован как `git tags only` для `0.1.x`;
   - demo-контент стандартизирован как пакетный sample, а не app-asset дубликат.
   - релиз `0.1.1` зафиксировал UPM-first delivery и единый installation URL в документации.
+  - в `0.1.2` целевой шаг: автоматический discovery preload для динамических диалогов вместо ручных preload-list.
 
 ## Контроль изменений
-last_checked_commit: cc4a01373278ca6ceb5accfed0a24101c23b59c8
-last_checked_date: 2026-02-21 03:41:29 +0700
+last_checked_commit: 0e140c1290679c6f89df29add6e86f2ae425996b
+last_checked_date: 2026-02-22 03:35:48 +0700

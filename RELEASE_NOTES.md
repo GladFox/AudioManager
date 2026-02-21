@@ -1,5 +1,23 @@
 # Release Notes
 
+## 0.1.2 - Draft
+
+### Цель
+- Закрыть функциональный гэп dynamic-dialog preload: исключить ручное составление списков `SoundEvent`/id для дозагрузки.
+
+### Планируемые изменения
+- Runtime discovery registry для автоматически обнаруженных `SoundEvent`.
+- Marker-based preload API:
+  - `CaptureDiscoveryMarker()`
+  - `PreloadDiscovered()`
+  - `PreloadDiscoveredSince(marker, ...)`
+- Scope-aware lifecycle discovered preload/unload (совместимо с текущим `AudioContentService`).
+- Обновление demo flow для сценария: загрузка диалога -> единый вызов preload -> play без второго клика.
+
+### Статус
+- ТЗ и role-plan подготовлены.
+- Реализация запланирована на релиз `0.1.2`.
+
 ## 0.1.1 - 2026-02-21
 
 ### Изменено

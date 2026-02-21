@@ -1,19 +1,21 @@
 # Active Context
 
 ## Текущее направление
-Релизная стабилизация `0.1.1`: UPM sample-конфигурация зафиксирована, документация и release notes синхронизированы.
+Подготовка релиза `0.1.2`: автосбор динамически появляющихся `SoundEvent` и preload без ручных списков для диалогов.
 
 ## Активные задачи
-- REVIEWER: контроль финальной консистентности версий (`README`, `package.json`, `CHANGELOG`, `RELEASE_NOTES`).
-- DOCS_WRITER: поддерживать единый UPM install URL для актуального тега.
-- QA_TESTER: smoke-проверка sample import после обновления до `0.1.1`.
+- REQUIREMENTS_OWNER: утвердить spec `0.1.2` на discovery preload.
+- ARCHITECT: согласовать lifecycle `SoundEvent` registry + marker-based preload.
+- IMPLEMENTER: реализовать discovery API в `AudioManager` и runtime реестр.
 
 ## Последние изменения
-- В `main` смержен PR с переносом полного demo-контента в `Samples~/AudioManager`.
-- Версия пакета повышена до `0.1.1`.
-- Обновлены release notes и основной README, добавлена явная UPM git-ссылка для установки.
+- Выявлен функциональный гэп: для динамических диалогов нужен ручной список ids/events для preload.
+- Подготовлен release-spec `0.1.2` для закрытия гэпа:
+  - `audio-0.1.2-dynamic-soundevent-discovery-spec.md`
+  - `audio-0.1.2-dynamic-soundevent-discovery-role-plan.md`
+- В `CHANGELOG` добавлен planned section для `0.1.2`.
 
 ## Следующие шаги
-1. Создать git tag `upm/v0.1.1` после финальной smoke-проверки.
-2. Проверить пакетную установку по UPM URL в чистом Unity-проекте.
-3. Подготовить scope следующего релиза (`0.1.2`).
+1. Реализовать discovery registry и API `PreloadDiscovered*`.
+2. Обновить demo-сценарий под marker-based preload.
+3. Выполнить QA matrix и выпустить `0.1.2`.
