@@ -25,6 +25,7 @@
 - Публичный API и namespace сохранены (`AudioManagement`).
 - `SoundEvent` использует только Addressables references.
 - Dynamic loading реализован через `AudioContentService` + scope/ref-count + delayed unload.
+- Dynamic discovery реализован через `SoundEventDiscoveryRegistry` + `PreloadDiscovered*` API.
 - On-demand policy для `0.1.x`: `SkipIfNotLoaded`.
 - Release channel для `0.1.x`: `git tags only` (`upm/vX.Y.Z`).
 
@@ -32,6 +33,7 @@
 - Fail-safe поведение при отсутствующем config/event/clip без исключений.
 - 2D/3D pooling без `Instantiate/Destroy` в steady-state.
 - Music restore после `Sound OFF -> ON` с ретраем до готовности контента.
+- Динамически появившиеся `SoundEvent` могут быть дозагружены без ручного списка ids/events.
 - Snapshot policy:
   - в одном кадре выигрывает больший приоритет;
   - между кадрами выигрывает последний запрос.

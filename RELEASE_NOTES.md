@@ -1,22 +1,26 @@
 # Release Notes
 
-## 0.1.2 - Draft
+## 0.1.2 - 2026-02-22
 
-### Цель
-- Закрыть функциональный гэп dynamic-dialog preload: исключить ручное составление списков `SoundEvent`/id для дозагрузки.
-
-### Планируемые изменения
-- Runtime discovery registry для автоматически обнаруженных `SoundEvent`.
-- Marker-based preload API:
+### Добавлено
+- Runtime discovery registry: автоматически регистрирует/удаляет `SoundEvent` через lifecycle (`OnEnable/OnDisable`).
+- Новый discovery API в `AudioManager`:
   - `CaptureDiscoveryMarker()`
-  - `PreloadDiscovered()`
+  - `PreloadDiscovered(...)`
   - `PreloadDiscoveredSince(marker, ...)`
-- Scope-aware lifecycle discovered preload/unload (совместимо с текущим `AudioContentService`).
-- Обновление demo flow для сценария: загрузка диалога -> единый вызов preload -> play без второго клика.
+- Editor hook для очистки discovery-реестра при переходе в Play Mode (устранение editor-конфликтов статического состояния).
+- Диагностика discovery в `AudioDebuggerWindow`:
+  - `Discovered Events`
+  - `Discovery Revision`
+  - `Last Discovered Preload Count`
 
-### Статус
-- ТЗ и role-plan подготовлены.
-- Реализация запланирована на релиз `0.1.2`.
+### Изменено
+- Тестовый bootstrap сцены перешел с ручного `PreloadByIds(...)` на `PreloadDiscovered(..., scopeId: "demo.dialogue")`.
+- Кнопка `Play Music (4)` больше не зависит от повторного клика из-за пропущенного preload в demo flow.
+
+### Совместимость
+- Существующие API `PreloadByIds/PreloadByEvents/PreloadBank` сохранены.
+- Политика `OnDemandPlayPolicy = SkipIfNotLoaded` не изменена.
 
 ## 0.1.1 - 2026-02-21
 
@@ -34,7 +38,7 @@
 ### Документация
 - Обновлен корневой `README.md`:
   - добавлена явная ссылка на UPM git dependency;
-  - обновлен путь импорта sample для версии `0.1.1`.
+  - обновлен путь импорта sample под текущую версию.
 - Обновлены package docs:
   - `upm/com.gladfox.audiomanager/README.md`
   - `upm/com.gladfox.audiomanager/CHANGELOG.md`

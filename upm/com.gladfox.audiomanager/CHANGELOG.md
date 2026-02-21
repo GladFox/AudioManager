@@ -2,12 +2,19 @@
 
 All notable changes to this package will be documented in this file.
 
-## [0.1.2] - Unreleased
-### Planned
-- Dynamic `SoundEvent` discovery registry for runtime-created/loaded events.
-- New preload APIs for discovered events (full and marker-based).
-- Dialog-friendly preload flow without manual `List<SoundEvent>`/`List<string>` assembly.
-- Scope-aware lifecycle for discovered preload/unload.
+## [0.1.2] - 2026-02-22
+### Added
+- Runtime `SoundEventDiscoveryRegistry` with auto-register on `SoundEvent.OnEnable/OnDisable`.
+- New discovery preload APIs in `AudioManager`:
+  - `CaptureDiscoveryMarker()`
+  - `PreloadDiscovered(...)`
+  - `PreloadDiscoveredSince(marker, ...)`
+- Discovery diagnostics in debugger (`DiscoveredEventCount`, `DiscoveryRevision`, `LastDiscoveredPreloadCount`).
+- Editor playmode hook to reset discovery registry before entering Play Mode.
+
+### Changed
+- Demo bootstrap now uses discovery preload with scope (`demo.dialogue`) instead of manual preload id list.
+- Documentation and release artifacts aligned for `0.1.2`.
 
 ## [0.1.1] - 2026-02-21
 ### Changed

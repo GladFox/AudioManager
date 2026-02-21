@@ -74,6 +74,16 @@ namespace AudioManagement
         public bool BypassReverbZones => bypassReverbZones;
         public bool BypassEffects => bypassEffects;
 
+        private void OnEnable()
+        {
+            SoundEventDiscoveryRegistry.Register(this);
+        }
+
+        private void OnDisable()
+        {
+            SoundEventDiscoveryRegistry.Unregister(this);
+        }
+
         private void OnValidate()
         {
             if (pitchRange.x <= 0f)

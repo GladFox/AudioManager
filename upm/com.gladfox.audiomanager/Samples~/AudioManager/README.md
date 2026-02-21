@@ -13,3 +13,4 @@ This sample contains the full `Assets/AudioManager` demo folder:
 ## Notes
 - The sample expects package runtime/editor code from `com.gladfox.audiomanager`.
 - Addressables settings live in the consumer app project.
+- Bootstrap uses discovery preload (`PreloadDiscovered`) for dialog audio, without manual id lists.

@@ -34,3 +34,5 @@
   Причина: минимизация операционной сложности на старте package lifecycle.
 - Решение: полный demo-контент хранить в `upm/com.gladfox.audiomanager/Samples~/AudioManager`, не дублировать его в `AudioManager/Assets`.
   Причина: единый источник example-ассетов для UPM и предсказуемый sample import flow через Package Manager.
+- Решение: автодискавери `SoundEvent` в рантайме через lifecycle реестр (`OnEnable/OnDisable`) и preload API `PreloadDiscovered*`.
+  Причина: убрать ручные preload-списки для динамически собираемых диалогов и сохранить централизованный контроль загрузки/выгрузки.

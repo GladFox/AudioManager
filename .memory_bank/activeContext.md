@@ -1,21 +1,25 @@
 # Active Context
 
 ## Текущее направление
-Подготовка релиза `0.1.2`: автосбор динамически появляющихся `SoundEvent` и preload без ручных списков для диалогов.
+Релиз `0.1.2` реализован: добавлен discovery preload для динамических `SoundEvent` без ручных preload-list.
 
 ## Активные задачи
-- REQUIREMENTS_OWNER: утвердить spec `0.1.2` на discovery preload.
-- ARCHITECT: согласовать lifecycle `SoundEvent` registry + marker-based preload.
-- IMPLEMENTER: реализовать discovery API в `AudioManager` и runtime реестр.
+- QA_TESTER: PlayMode smoke и регрессия по dynamic dialog flow.
+- DOCS_WRITER: финальная синхронизация README/AI guide/release docs.
+- STEWARD: подготовка tag `upm/v0.1.2`.
 
 ## Последние изменения
-- Выявлен функциональный гэп: для динамических диалогов нужен ручной список ids/events для preload.
-- Подготовлен release-spec `0.1.2` для закрытия гэпа:
-  - `audio-0.1.2-dynamic-soundevent-discovery-spec.md`
-  - `audio-0.1.2-dynamic-soundevent-discovery-role-plan.md`
-- В `CHANGELOG` добавлен planned section для `0.1.2`.
+- Добавлен runtime `SoundEventDiscoveryRegistry`.
+- `SoundEvent` теперь авто-регистрируется в discovery registry (`OnEnable/OnDisable`).
+- В `AudioManager` добавлены API:
+  - `CaptureDiscoveryMarker()`
+  - `PreloadDiscovered(...)`
+  - `PreloadDiscoveredSince(marker, ...)`
+- Demo bootstrap переведен с ручного `PreloadByIds` на `PreloadDiscovered(..., scopeId: "demo.dialogue")`.
+- Добавлен editor hook для очистки discovery-реестра при входе в Play Mode.
+- Обновлены release/docs (`CHANGELOG`, `RELEASE_NOTES`, `README`, `ai.md`).
 
 ## Следующие шаги
-1. Реализовать discovery registry и API `PreloadDiscovered*`.
-2. Обновить demo-сценарий под marker-based preload.
-3. Выполнить QA matrix и выпустить `0.1.2`.
+1. Прогнать manual QA matrix для dynamic dialog и unload-cycle.
+2. Создать git tag `upm/v0.1.2`.
+3. Подготовить scope следующего релиза (`0.1.3`).

@@ -83,6 +83,7 @@ namespace AudioManagement
         private readonly List<AudioClip> resolvedClips = new List<AudioClip>(16);
         private readonly List<AudioContentService.WeightedLoadedClip> resolvedWeightedClips = new List<AudioContentService.WeightedLoadedClip>(16);
         private readonly List<SoundEvent> preloadEventScratch = new List<SoundEvent>(32);
+        private readonly List<SoundEvent> discoveredEventScratch = new List<SoundEvent>(64);
         private readonly List<string> preloadIdScratch = new List<string>(32);
 
         private AudioSourcePool pool2D;
@@ -106,6 +107,7 @@ namespace AudioManagement
         private AudioClip restoreMusicClip;
         private uint rngState = 2463534242u;
         private float lastMasterVolumeBeforeMute = 1f;
+        private int lastDiscoveredPreloadCount;
 
         public AudioConfig Config => config;
 
@@ -118,6 +120,9 @@ namespace AudioManagement
         public int LoadingAddressableClipCount => contentService != null ? contentService.LoadingClipCount : 0;
         public int FailedAddressableClipCount => contentService != null ? contentService.FailedClipCount : 0;
         public int ActiveAudioScopeCount => contentService != null ? contentService.ScopeCount : 0;
+        public int DiscoveredEventCount => SoundEventDiscoveryRegistry.Count;
+        public int DiscoveryRevision => SoundEventDiscoveryRegistry.CurrentRevision;
+        public int LastDiscoveredPreloadCount => lastDiscoveredPreloadCount;
         public bool SoundEnabled => soundEnabled;
         public bool MusicEnabled => musicEnabled;
 
@@ -470,6 +475,23 @@ namespace AudioManagement
             return contentService.PreloadEvents(preloadEventScratch);
         }
 
+        public int CaptureDiscoveryMarker()
+        {
+            return SoundEventDiscoveryRegistry.CaptureMarker();
+        }
+
+        public AudioLoadHandle PreloadDiscovered(bool acquireScope = false, string scopeId = null)
+        {
+            lastDiscoveredPreloadCount = SoundEventDiscoveryRegistry.FillAll(discoveredEventScratch);
+            return PreloadDiscoveredInternal(acquireScope, scopeId);
+        }
+
+        public AudioLoadHandle PreloadDiscoveredSince(int marker, bool acquireScope = false, string scopeId = null)
+        {
+            lastDiscoveredPreloadCount = SoundEventDiscoveryRegistry.FillSince(marker, discoveredEventScratch);
+            return PreloadDiscoveredInternal(acquireScope, scopeId);
+        }
+
         public AudioLoadHandle AcquireScope(string scopeId, IReadOnlyList<string> ids)
         {
             if (contentService == null || string.IsNullOrWhiteSpace(scopeId) || ids == null || ids.Count == 0)
@@ -500,6 +522,49 @@ namespace AudioManagement
             }
 
             return contentService.AcquireScope(scopeId, preloadEventScratch);
+        }
+
+        private AudioLoadHandle PreloadDiscoveredInternal(bool acquireScope, string scopeId)
+        {
+            if (contentService == null)
+            {
+                return AudioLoadHandle.Completed();
+            }
+
+            if (!soundEnabled && !musicEnabled)
+            {
+                return AudioLoadHandle.Completed();
+            }
+
+            if (acquireScope && string.IsNullOrWhiteSpace(scopeId))
+            {
+                return AudioLoadHandle.Failed("scopeId is required when acquireScope=true.");
+            }
+
+            preloadEventScratch.Clear();
+            for (var i = 0; i < discoveredEventScratch.Count; i++)
+            {
+                var evt = discoveredEventScratch[i];
+                if (evt == null || !CanLoadEventForCurrentSettings(evt) || preloadEventScratch.Contains(evt))
+                {
+                    continue;
+                }
+
+                preloadEventScratch.Add(evt);
+            }
+
+            lastDiscoveredPreloadCount = preloadEventScratch.Count;
+            if (preloadEventScratch.Count == 0)
+            {
+                return AudioLoadHandle.Completed();
+            }
+
+            if (acquireScope)
+            {
+                return contentService.AcquireScope(scopeId, preloadEventScratch);
+            }
+
+            return contentService.PreloadEvents(preloadEventScratch);
         }
 
         public void ReleaseScope(string scopeId)

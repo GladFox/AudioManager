@@ -23,7 +23,7 @@ Add to your project's `Packages/manifest.json`:
 Use Unity Package Manager git URL format, for example:
 
 ```text
-https://github.com/GladFox/AudioManager.git?path=/upm/com.gladfox.audiomanager#upm/v0.1.1
+https://github.com/GladFox/AudioManager.git?path=/upm/com.gladfox.audiomanager#upm/v0.1.2
 ```
 
 ## Quick Start
@@ -43,8 +43,21 @@ audio.PlayMusic("demo.music.loop", 0.35f, 0.35f);
 - `PreloadByIds(...)`
 - `PreloadByEvents(...)`
 - `PreloadBank(...)`
+- `CaptureDiscoveryMarker()`
+- `PreloadDiscovered(...)`
+- `PreloadDiscoveredSince(marker, ...)`
 - `AcquireScope(...)` / `ReleaseScope(...)`
 - `UnloadBank(...)` / `UnloadUnused()`
+
+### Dynamic Dialog Pattern
+```csharp
+var audio = AudioManagement.AudioManager.Instance;
+var marker = audio.CaptureDiscoveryMarker();
+
+// Build/load dialog and create/attach SoundEvent assets here.
+
+var load = audio.PreloadDiscoveredSince(marker, acquireScope: true, scopeId: "dialogue.scope");
+```
 
 ## Samples
 Import `Audio Manager Example` from Package Manager Samples.

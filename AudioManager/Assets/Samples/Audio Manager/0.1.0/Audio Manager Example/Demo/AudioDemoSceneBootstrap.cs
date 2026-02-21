@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -14,8 +13,7 @@ namespace AudioManagement
         private const string Line2SoundId = "demo.sfx.moving";
         private const string Line3SoundId = "demo.ui.click";
         private const string MusicEventId = "demo.music.loop";
-
-        private readonly List<string> dialogueSoundIds = new List<string>(5);
+        private const string DialogueScopeId = "demo.dialogue";
 
         private AudioHandle musicHandle;
         private Transform movingEmitter;
@@ -50,13 +48,6 @@ namespace AudioManagement
         private void Awake()
         {
             EnsureAudioManager();
-
-            dialogueSoundIds.Clear();
-            dialogueSoundIds.Add(IntroSoundId);
-            dialogueSoundIds.Add(Line1SoundId);
-            dialogueSoundIds.Add(Line2SoundId);
-            dialogueSoundIds.Add(Line3SoundId);
-            dialogueSoundIds.Add(MusicEventId);
 
             var followGo = new GameObject("SFX Follow Target");
             movingEmitter = followGo.transform;
@@ -220,7 +211,7 @@ namespace AudioManagement
             loadingProgress01 = 0f;
             loadingMessage = "Загрузка звуков диалога...";
 
-            var handle = manager.PreloadByIds(dialogueSoundIds);
+            var handle = manager.PreloadDiscovered(acquireScope: true, scopeId: DialogueScopeId);
             while (handle != null && !handle.IsDone)
             {
                 loadingProgress01 = Mathf.Clamp01(handle.Progress);

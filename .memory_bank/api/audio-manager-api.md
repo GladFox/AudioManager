@@ -21,6 +21,19 @@
 - `void MuteAll(bool mute)`
 - `bool TransitionToSnapshot(string name, float transitionTime)`
 
+## Content Loading
+- `AudioLoadHandle PreloadByIds(IReadOnlyList<string> ids)`
+- `AudioLoadHandle PreloadByEvents(IReadOnlyList<SoundEvent> events)`
+- `AudioLoadHandle PreloadBank(string bankId)`
+- `int CaptureDiscoveryMarker()`
+- `AudioLoadHandle PreloadDiscovered(bool acquireScope = false, string scopeId = null)`
+- `AudioLoadHandle PreloadDiscoveredSince(int marker, bool acquireScope = false, string scopeId = null)`
+- `AudioLoadHandle AcquireScope(string scopeId, IReadOnlyList<string> ids)`
+- `void ReleaseScope(string scopeId)`
+- `void UnloadBank(string bankId)`
+- `void UnloadUnused()`
+- `float GetLoadProgress(AudioLoadHandle handle)`
+
 ## Lifecycle
 - `void Stop(AudioHandle handle, float fadeOut = 0f)`
 - `void StopAllSFX(float fadeOut = 0f)`
@@ -40,4 +53,7 @@
 - `int ActiveVoiceCount`
 - `int Pool2DInUse`, `int Pool2DTotal`
 - `int Pool3DInUse`, `int Pool3DTotal`
+- `int DiscoveredEventCount`
+- `int DiscoveryRevision`
+- `int LastDiscoveredPreloadCount`
 - `int GetDebugVoices(List<AudioManager.DebugVoiceInfo> buffer)`

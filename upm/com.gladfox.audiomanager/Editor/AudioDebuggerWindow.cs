@@ -80,6 +80,9 @@ namespace AudioManagementEditor
             EditorGUILayout.LabelField("Addressables Loading", manager.LoadingAddressableClipCount.ToString());
             EditorGUILayout.LabelField("Addressables Failed", manager.FailedAddressableClipCount.ToString());
             EditorGUILayout.LabelField("Audio Scopes", manager.ActiveAudioScopeCount.ToString());
+            EditorGUILayout.LabelField("Discovered Events", manager.DiscoveredEventCount.ToString());
+            EditorGUILayout.LabelField("Discovery Revision", manager.DiscoveryRevision.ToString());
+            EditorGUILayout.LabelField("Last Discovered Preload Count", manager.LastDiscoveredPreloadCount.ToString());
 
             EditorGUILayout.Space();
             using (new EditorGUILayout.HorizontalScope())

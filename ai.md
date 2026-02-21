@@ -22,7 +22,7 @@
 `"com.gladfox.audiomanager": "file:../../upm/com.gladfox.audiomanager"`
 
 2. Git dependency (внешний проект):
-`https://github.com/GladFox/AudioManager.git?path=/upm/com.gladfox.audiomanager#upm/v0.1.1`
+`https://github.com/GladFox/AudioManager.git?path=/upm/com.gladfox.audiomanager#upm/v0.1.2`
 
 ## Минимальный integration checklist
 1. Установить пакет.
@@ -41,6 +41,10 @@
 - Использовать публичный фасад `AudioManager` (`PlayUI/PlaySFX/PlayMusic/...`), а не прямые вызовы `AudioSource.Play*` в gameplay/UI коде.
 - Не создавать/удалять `AudioSource` вручную для обычного воспроизведения; использовать пул библиотеки.
 - Для контента через Addressables сначала preload (`PreloadByIds`, `PreloadByEvents`, `PreloadBank`), затем проигрывание.
+- Для динамических диалогов без ручных списков использовать discovery API:
+  - `marker = CaptureDiscoveryMarker()` до построения/поднятия диалога;
+  - `PreloadDiscoveredSince(marker, acquireScope: true, scopeId: "...")` после завершения загрузки диалога.
+- Для полного preload discoverable событий использовать `PreloadDiscovered(...)`.
 - Учитывать policy для `0.1.x`: `SkipIfNotLoaded`.
 - Для жизненного цикла контента использовать scope/ref-count API: `AcquireScope` / `ReleaseScope`.
 - При выключении/включении звука учитывать автодозагрузку недостающего контента и восстановление текущего музыкального трека.

@@ -1,7 +1,7 @@
 {
   "name": "com.gladfox.audiomanager",
   "displayName": "Audio Manager",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "unity": "6000.2",
   "description": "Centralized Unity audio management with AudioMixer snapshots, pooled AudioSources, and Addressables-driven dynamic loading.",
   "license": "MIT",
