@@ -15,7 +15,7 @@ namespace AudioManagement
         private const string Line3SoundId = "demo.ui.click";
         private const string MusicEventId = "demo.music.loop";
 
-        private readonly List<string> dialogueSoundIds = new List<string>(4);
+        private readonly List<string> dialogueSoundIds = new List<string>(5);
 
         private AudioHandle musicHandle;
         private Transform movingEmitter;
@@ -56,6 +56,7 @@ namespace AudioManagement
             dialogueSoundIds.Add(Line1SoundId);
             dialogueSoundIds.Add(Line2SoundId);
             dialogueSoundIds.Add(Line3SoundId);
+            dialogueSoundIds.Add(MusicEventId);
 
             var followGo = new GameObject("SFX Follow Target");
             movingEmitter = followGo.transform;
