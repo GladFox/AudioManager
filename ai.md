@@ -8,12 +8,12 @@
 
 ## С чего начинать
 Перед любой задачей прочитать:
-- `/Users/glad/AudioManager/local/README.md`
-- `/Users/glad/AudioManager/upm/com.gladfox.audiomanager/README.md`
-- `/Users/glad/AudioManager/AGENTS.md`
-- `/Users/glad/AudioManager/.memory_bank/productContext.md`
-- `/Users/glad/AudioManager/.memory_bank/activeContext.md`
-- `/Users/glad/AudioManager/.memory_bank/progress.md`
+- `local/README.md`
+- `upm/com.gladfox.audiomanager/README.md`
+- `AGENTS.md`
+- `.memory_bank/productContext.md`
+- `.memory_bank/activeContext.md`
+- `.memory_bank/progress.md`
 
 ## Как подключать пакет
 Использовать один из вариантов:
@@ -52,13 +52,13 @@
 - Не пропускать обновление changelog/version при релизных изменениях пакета.
 
 ## Правила изменений в этом репозитории
-- Библиотека: `/Users/glad/AudioManager/upm/com.gladfox.audiomanager`
-- Consumer app: `/Users/glad/AudioManager/AudioManager`
+- Библиотека: `upm/com.gladfox.audiomanager`
+- Consumer app: `AudioManager`
 - При изменении package API/поведения обновлять:
-- `/Users/glad/AudioManager/upm/com.gladfox.audiomanager/README.md`
-- `/Users/glad/AudioManager/upm/com.gladfox.audiomanager/CHANGELOG.md`
-- `/Users/glad/AudioManager/README.md` (если меняется интеграционный flow)
-- `/Users/glad/AudioManager/.memory_bank/*` (active/progress/systemPatterns при необходимости)
+- `upm/com.gladfox.audiomanager/README.md`
+- `upm/com.gladfox.audiomanager/CHANGELOG.md`
+- `README.md` (если меняется интеграционный flow)
+- `.memory_bank/*` (active/progress/systemPatterns при необходимости)
 
 ## PR/DoD для ИИ-агента
 1. План задачи сформирован до реализации.
