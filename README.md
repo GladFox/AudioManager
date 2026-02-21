@@ -51,11 +51,13 @@ Release channel `0.1.x`: `git tags only`
 4. Открой `Assets/Samples/Audio Manager/<package-version>/Audio Manager Example/Demo/AudioDemoScene.unity`.
 5. Запусти Play Mode и проверь:
    - preload overlay с прогрессом загрузки Addressables;
+   - dynamic dialog prefab (`Resources/Audio/DemoDialoguePrefab`) со ссылками на `SoundEvent`;
    - `1/2/3`: line playback (UI/3D follow/UI);
    - `4`: music toggle;
    - `5`: pause/resume;
    - `6`: menu/gameplay snapshot;
-   - `7`: sound off/on (+ reload missing dialogue sounds).
+   - `7`: sound off/on (+ reload missing dialogue sounds);
+   - `8`: dialogue open/close with `PreloadDiscoveredSince` + `ReleaseScope`.
 
 ## Базовый пример использования
 ```csharp
